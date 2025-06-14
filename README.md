@@ -1,8 +1,5 @@
 # GitHub Zero
 
-<<<<<<< HEAD
-Coming soon... 🚀
-=======
 A lightweight GitHub CLI that works everywhere - standalone, in Laravel, Laravel Zero, or as a Conduit extension.
 
 ## Installation
@@ -50,4 +47,3 @@ export GITHUB_TOKEN=your_token_here
 ## License
 
 MIT License. See [LICENSE](LICENSE) for details.
->>>>>>> 2b9b069 (feat: Initial GitHub Zero implementation with dual-mode architecture)

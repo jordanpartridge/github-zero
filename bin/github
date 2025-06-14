@@ -22,17 +22,7 @@ if (!$autoloaderFound) {
     exit(1);
 }
 
-// Bootstrap Laravel helpers for standalone usage
-if (!function_exists('config')) {
-    function config(string $key, $default = null) {
-        $configs = [
-            'github-client.base_url' => 'https://api.github.com',
-            'github-client.timeout' => 30,
-        ];
-        
-        return $configs[$key] ?? $default;
-    }
-}
+// GitHub Client v2.0.0 no longer needs config() helper bootstrap
 
 use JordanPartridge\GitHubZero\Application;
 

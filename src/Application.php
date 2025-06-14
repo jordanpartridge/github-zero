@@ -18,7 +18,7 @@ class Application extends ConsoleApplication
 
     private function setupCommands(): void
     {
-        // Create GitHub client with connector
+        // Create GitHub client with v2.0 simplified connector API
         $token = $_ENV['GITHUB_TOKEN'] ?? getenv('GITHUB_TOKEN') ?? '';
         $connector = new \JordanPartridge\GithubClient\GithubConnector($token);
         $github = new Github($connector);

@@ -8,7 +8,7 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use JordanPartridge\GithubClient\Github;
 use JordanPartridge\GithubClient\Enums\Sort;
-use JordanPartridge\GithubClient\Enums\RepoType;
+use JordanPartridge\GithubClient\Enums\Repos\Type as RepoType;
 
 use function Laravel\Prompts\confirm;
 use function Laravel\Prompts\select;

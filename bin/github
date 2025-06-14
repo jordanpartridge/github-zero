@@ -1,0 +1,40 @@
+#!/usr/bin/env php
+<?php
+
+// Autoloader detection for different installation types
+$autoloadPaths = [
+    __DIR__ . '/../vendor/autoload.php',     // Package development
+    __DIR__ . '/../../../autoload.php',     // Composer dependency
+    __DIR__ . '/../../../../autoload.php',  // Global installation
+];
+
+$autoloaderFound = false;
+foreach ($autoloadPaths as $autoloadPath) {
+    if (file_exists($autoloadPath)) {
+        require $autoloadPath;
+        $autoloaderFound = true;
+        break;
+    }
+}
+
+if (!$autoloaderFound) {
+    fwrite(STDERR, "Error: Composer autoloader not found. Please run 'composer install'.\n");
+    exit(1);
+}
+
+// Bootstrap Laravel helpers for standalone usage
+if (!function_exists('config')) {
+    function config(string $key, $default = null) {
+        $configs = [
+            'github-client.base_url' => 'https://api.github.com',
+            'github-client.timeout' => 30,
+        ];
+        
+        return $configs[$key] ?? $default;
+    }
+}
+
+use JordanPartridge\GitHubZero\Application;
+
+$app = new Application();
+$app->run();

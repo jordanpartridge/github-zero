@@ -1,0 +1,37 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+// Autoloader detection for different installation types
+$autoloadPaths = [
+    __DIR__ . '/../vendor/autoload.php',     // Package development
+    __DIR__ . '/../../../autoload.php',     // Composer dependency
+    __DIR__ . '/../../../../autoload.php',  // Global installation
+];
+
+$autoloaderFound = false;
+foreach ($autoloadPaths as $autoloadPath) {
+    if (file_exists($autoloadPath)) {
+        require $autoloadPath;
+        $autoloaderFound = true;
+        break;
+    }
+}
+
+if (!$autoloaderFound) {
+    fwrite(STDERR, "Error: Composer autoloader not found. Please run 'composer install'.\n");
+    exit(1);
+}
+
+// GitHub Client v2.0.0 no longer needs config() helper bootstrap
+
+use JordanPartridge\GitHubZero\Application;
+
+$app = new Application();
+try {
+    $app->run();
+} catch (\Throwable $e) {
+    fwrite(STDERR, "❌ Fatal error: {$e->getMessage()}\n");
+    exit(1);
+}

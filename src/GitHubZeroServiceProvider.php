@@ -23,6 +23,14 @@ class GitHubZeroServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Publish configuration
+        $this->publishes([
+            __DIR__.'/../config/github-zero.php' => config_path('github-zero.php'),
+        ], 'github-zero-config');
+
+        // Merge default configuration
+        $this->mergeConfigFrom(__DIR__.'/../config/github-zero.php', 'github-zero');
+
         if ($this->app->runningInConsole()) {
             $this->commands([
                 ReposCommand::class,

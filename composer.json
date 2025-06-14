@@ -46,6 +46,17 @@
             "extension": "JordanPartridge\\GitHubZero\\ConduitExtension"
         }
     },
+    "scripts": {
+        "test": "pest",
+        "lint": "pint",
+        "lint:fix": "pint --dirty",
+        "analyse": "phpstan analyse src --level=max",
+        "quality": [
+            "@lint",
+            "@analyse",
+            "@test"
+        ]
+    },
     "config": {
         "optimize-autoloader": true,
         "preferred-install": "dist",

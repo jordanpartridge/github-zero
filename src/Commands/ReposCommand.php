@@ -127,7 +127,16 @@ class ReposCommand extends Command
                     ],
                     default: 'updated'
                 ),
-                'limit' => (int) ($input->getOption('limit') ?? 10)
+                'limit' => (int) select(
+                    label: '🔢 How many repositories?',
+                    options: [
+                        '5' => '5 repositories',
+                        '10' => '10 repositories',
+                        '20' => '20 repositories',
+                        '50' => '50 repositories',
+                    ],
+                    default: $input->getOption('limit') ?? '10'
+                )
             ];
         }
 
@@ -145,7 +154,8 @@ class ReposCommand extends Command
 
         foreach ($repos as $index => $repo) {
             $visibility = $repo['private'] ? '🔒' : '🌍';
-            $language = $repo['language'] ? "({$repo['language']})" : '';
+            $language = $repo['language'] ?? null;
+            $language = $language ? "({$language})" : '';
             
             $output->writeln(sprintf(
                 '<comment>%d.</comment> %s <info>%s</info> %s',
@@ -168,7 +178,8 @@ class ReposCommand extends Command
         $choices = [];
         foreach ($repos as $index => $repo) {
             $visibility = $repo['private'] ? '🔒' : '🌍';
-            $language = $repo['language'] ? "({$repo['language']})" : '';
+            $language = $repo['language'] ?? null;
+            $language = $language ? "({$language})" : '';
             $choices[$repo['clone_url']] = "{$visibility} {$repo['full_name']} {$language}";
         }
 

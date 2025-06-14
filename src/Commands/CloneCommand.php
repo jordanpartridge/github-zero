@@ -163,13 +163,9 @@ class CloneCommand extends Command
 
     private function getDirectoryName(string $repo): string
     {
-        // Extract directory name from repo
-        if (str_contains($repo, '/')) {
-            return basename($repo);
-        }
-
-        // Remove .git suffix if present
-        return str_replace('.git', '', basename($repo));
+        // Extract directory name from repo and remove .git suffix
+        $basename = basename($repo);
+        return str_replace('.git', '', $basename);
     }
 
     private function hasGitHubToken(): bool

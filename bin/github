@@ -1,6 +1,8 @@
 #!/usr/bin/env php
 <?php
 
+declare(strict_types=1);
+
 // Autoloader detection for different installation types
 $autoloadPaths = [
     __DIR__ . '/../vendor/autoload.php',     // Package development
@@ -27,4 +29,9 @@ if (!$autoloaderFound) {
 use JordanPartridge\GitHubZero\Application;
 
 $app = new Application();
-$app->run();
+try {
+    $app->run();
+} catch (\Throwable $e) {
+    fwrite(STDERR, "❌ Fatal error: {$e->getMessage()}\n");
+    exit(1);
+}

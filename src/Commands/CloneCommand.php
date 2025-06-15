@@ -14,14 +14,28 @@ use function Laravel\Prompts\select;
 use function Laravel\Prompts\text;
 use function Laravel\Prompts\spin;
 
+/**
+ * GitHub repository cloning command.
+ * 
+ * Provides functionality to clone GitHub repositories with interactive
+ * selection or direct repository specification.
+ */
 class CloneCommand extends Command
 {
+    /**
+     * Create a new CloneCommand instance.
+     * 
+     * @param Github $github The GitHub client instance
+     */
     public function __construct(
         protected Github $github
     ) {
         parent::__construct();
     }
 
+    /**
+     * Configure the command with arguments and options.
+     */
     protected function configure(): void
     {
         $this
@@ -32,6 +46,13 @@ class CloneCommand extends Command
             ->addOption('interactive', null, InputOption::VALUE_NONE, 'Use interactive selection');
     }
 
+    /**
+     * Execute the clone command.
+     * 
+     * @param InputInterface $input Command input
+     * @param OutputInterface $output Command output
+     * @return int Exit code (0 for success, 1 for error)
+     */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         if (!$this->hasGitHubToken()) {
@@ -56,6 +77,11 @@ class CloneCommand extends Command
         return $this->cloneRepository($repo, $input, $output);
     }
 
+    /**
+     * Display welcome message and header.
+     * 
+     * @param OutputInterface $output Command output interface
+     */
     private function displayWelcome(OutputInterface $output): void
     {
         $output->writeln('');
@@ -64,6 +90,12 @@ class CloneCommand extends Command
         $output->writeln('');
     }
 
+    /**
+     * Interactively select a repository to clone.
+     * 
+     * @param OutputInterface $output Command output interface
+     * @return string|null Selected repository name or null if cancelled
+     */
     private function selectRepository(OutputInterface $output): ?string
     {
         try {
@@ -104,6 +136,14 @@ class CloneCommand extends Command
         }
     }
 
+    /**
+     * Clone the specified repository.
+     * 
+     * @param string $repo Repository identifier (name or URL)
+     * @param InputInterface $input Command input
+     * @param OutputInterface $output Command output
+     * @return int Exit code from git clone operation
+     */
     private function cloneRepository(string $repo, InputInterface $input, OutputInterface $output): int
     {
         // Parse repository input
@@ -128,23 +168,60 @@ class CloneCommand extends Command
         $output->writeln("<comment>🚀 Running: {$command}</comment>");
         $output->writeln('');
 
-        // Execute clone
+        // Execute clone with better error handling
         $result = 0;
-        passthru($command, $result);
+        $gitOutput = [];
+        exec($command . ' 2>&1', $gitOutput, $result);
 
         if ($result === 0) {
             $output->writeln("<info>✅ Successfully cloned {$repo}!</info>");
             
-            if ($directory && confirm("📂 Open {$directory} in your editor?", false)) {
-                exec("code \"{$directory}\"");
+            if ($directory && is_dir($directory) && confirm("📂 Open {$directory} in your editor?", false)) {
+                // Try common editors
+                $editors = ['code', 'vim', 'nano'];
+                $editorOpened = false;
+                
+                foreach ($editors as $editor) {
+                    if (shell_exec("which {$editor}")) {
+                        exec("{$editor} \"{$directory}\" &");
+                        $editorOpened = true;
+                        break;
+                    }
+                }
+                
+                if (!$editorOpened) {
+                    $output->writeln("<comment>💡 No supported editor found. Try: cd \"{$directory}\"</comment>");
+                }
             }
         } else {
             $output->writeln("<error>💥 Failed to clone {$repo}</error>");
+            
+            // Provide specific error messages based on common failure scenarios
+            $errorOutput = implode("\n", $gitOutput);
+            
+            if (str_contains($errorOutput, 'Repository not found')) {
+                $output->writeln('<error>❌ Repository not found. Check the repository name and your access permissions.</error>');
+            } elseif (str_contains($errorOutput, 'Permission denied')) {
+                $output->writeln('<error>🔒 Permission denied. Check your GitHub token or SSH key setup.</error>');
+            } elseif (str_contains($errorOutput, 'already exists')) {
+                $output->writeln('<error>📁 Directory already exists and is not empty.</error>');
+            } elseif (str_contains($errorOutput, 'Could not resolve host')) {
+                $output->writeln('<error>🌐 Network error. Check your internet connection.</error>');
+            } else {
+                $output->writeln('<error>Git output:</error>');
+                $output->writeln('<comment>' . $errorOutput . '</comment>');
+            }
         }
 
         return $result;
     }
 
+    /**
+     * Parse repository input and convert to clone URL.
+     * 
+     * @param string $repo Repository input (URL or owner/repo format)
+     * @return string Git clone URL
+     */
     private function parseRepositoryInput(string $repo): string
     {
         // If it's already a full URL, return as-is
@@ -161,6 +238,12 @@ class CloneCommand extends Command
         return "https://github.com/{$repo}.git";
     }
 
+    /**
+     * Extract directory name from repository identifier.
+     * 
+     * @param string $repo Repository identifier
+     * @return string Directory name for cloning
+     */
     private function getDirectoryName(string $repo): string
     {
         // Extract directory name from repo and remove .git suffix
@@ -168,6 +251,11 @@ class CloneCommand extends Command
         return str_replace('.git', '', $basename);
     }
 
+    /**
+     * Check if a GitHub token is available in environment variables.
+     * 
+     * @return bool True if token exists, false otherwise
+     */
     private function hasGitHubToken(): bool
     {
         return !empty($_ENV['GITHUB_TOKEN']) || !empty(getenv('GITHUB_TOKEN'));

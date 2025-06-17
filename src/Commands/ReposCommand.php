@@ -2,13 +2,13 @@
 
 namespace JordanPartridge\GitHubZero\Commands;
 
+use JordanPartridge\GithubClient\Enums\Repos\Type as RepoType;
+use JordanPartridge\GithubClient\Enums\Sort;
+use JordanPartridge\GithubClient\Github;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use JordanPartridge\GithubClient\Github;
-use JordanPartridge\GithubClient\Enums\Sort;
-use JordanPartridge\GithubClient\Enums\Repos\Type as RepoType;
 
 use function Laravel\Prompts\confirm;
 use function Laravel\Prompts\select;
@@ -16,7 +16,7 @@ use function Laravel\Prompts\spin;
 
 /**
  * GitHub repositories management command.
- * 
+ *
  * Provides functionality to list, filter, and interact with GitHub repositories
  * using interactive prompts or command-line options.
  */
@@ -24,23 +24,23 @@ class ReposCommand extends Command
 {
     /** @var string[] Valid repository types */
     private const VALID_TYPES = ['all', 'owner', 'public', 'private', 'member'];
-    
+
     /** @var string[] Valid sort options */
     private const VALID_SORTS = ['created', 'updated', 'pushed', 'full_name'];
-    
+
     /** @var int Default repository limit */
     private const DEFAULT_LIMIT = 10;
-    
+
     /** @var int Maximum repositories per page (GitHub API limit) */
     private const MAX_LIMIT = 100;
-    
+
     /** @var int Default repositories for interactive selection */
     private const INTERACTIVE_LIMIT = 20;
 
     /**
      * Create a new ReposCommand instance.
-     * 
-     * @param Github $github The GitHub client instance
+     *
+     * @param  Github  $github  The GitHub client instance
      */
     public function __construct(
         protected Github $github
@@ -64,16 +64,17 @@ class ReposCommand extends Command
 
     /**
      * Execute the repos command.
-     * 
-     * @param InputInterface $input Command input
-     * @param OutputInterface $output Command output
+     *
+     * @param  InputInterface  $input  Command input
+     * @param  OutputInterface  $output  Command output
      * @return int Exit code (0 for success, 1 for error)
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        if (!$this->hasGitHubToken()) {
+        if (! $this->hasGitHubToken()) {
             $output->writeln('<error>🚫 No GitHub token found!</error>');
             $output->writeln('<comment>💡 Set GITHUB_TOKEN environment variable</comment>');
+
             return 1;
         }
 
@@ -93,21 +94,24 @@ class ReposCommand extends Command
 
             // Check for API errors
             if (is_array($repos) && isset($repos['message'])) {
-                $output->writeln('<error>❌ GitHub API Error: ' . $repos['message'] . '</error>');
+                $output->writeln('<error>❌ GitHub API Error: '.$repos['message'].'</error>');
                 if (isset($repos['documentation_url'])) {
-                    $output->writeln('<comment>📖 See: ' . $repos['documentation_url'] . '</comment>');
+                    $output->writeln('<comment>📖 See: '.$repos['documentation_url'].'</comment>');
                 }
+
                 return 1;
             }
 
-            if (empty($repos) || !is_array($repos)) {
+            if (empty($repos) || ! is_array($repos)) {
                 $output->writeln('<comment>📭 No repositories found matching your criteria.</comment>');
+
                 return 0;
             }
 
             // Check if it's a valid repo array (should have numeric indices)
-            if (!isset($repos[0])) {
+            if (! isset($repos[0])) {
                 $output->writeln('<error>❌ Unexpected API response format</error>');
+
                 return 1;
             }
 
@@ -118,7 +122,8 @@ class ReposCommand extends Command
             }
 
         } catch (\Exception $e) {
-            $output->writeln('<error>❌ Error fetching repositories: ' . $e->getMessage() . '</error>');
+            $output->writeln('<error>❌ Error fetching repositories: '.$e->getMessage().'</error>');
+
             return 1;
         }
 
@@ -127,18 +132,18 @@ class ReposCommand extends Command
 
     /**
      * Check if a GitHub token is available in environment variables.
-     * 
+     *
      * @return bool True if token exists, false otherwise
      */
     private function hasGitHubToken(): bool
     {
-        return !empty($_ENV['GITHUB_TOKEN']) || !empty(getenv('GITHUB_TOKEN'));
+        return ! empty($_ENV['GITHUB_TOKEN']) || ! empty(getenv('GITHUB_TOKEN'));
     }
 
     /**
      * Display welcome message and header.
-     * 
-     * @param OutputInterface $output Command output interface
+     *
+     * @param  OutputInterface  $output  Command output interface
      */
     private function displayWelcome(OutputInterface $output): void
     {
@@ -150,9 +155,9 @@ class ReposCommand extends Command
 
     /**
      * Get repository filter options from user input or interactive prompts.
-     * 
-     * @param InputInterface $input Command input
-     * @param OutputInterface $output Command output
+     *
+     * @param  InputInterface  $input  Command input
+     * @param  OutputInterface  $output  Command output
      * @return array{type: string, sort: string, limit: int} Filter options
      */
     private function getFilterOptions(InputInterface $input, OutputInterface $output): array
@@ -166,7 +171,7 @@ class ReposCommand extends Command
                         'owner' => 'Owned by me',
                         'public' => 'Public repositories',
                         'private' => 'Private repositories',
-                        'member' => 'Member repositories'
+                        'member' => 'Member repositories',
                     ],
                     default: 'all'
                 ),
@@ -176,7 +181,7 @@ class ReposCommand extends Command
                         'updated' => 'Recently updated',
                         'created' => 'Recently created',
                         'pushed' => 'Recently pushed',
-                        'full_name' => 'Alphabetical'
+                        'full_name' => 'Alphabetical',
                     ],
                     default: 'updated'
                 ),
@@ -189,7 +194,7 @@ class ReposCommand extends Command
                         '50' => '50 repositories',
                     ],
                     default: $input->getOption('limit') ?? (string) self::DEFAULT_LIMIT
-                )
+                ),
             ];
         }
 
@@ -197,32 +202,32 @@ class ReposCommand extends Command
         $type = $input->getOption('type') ?? 'all';
         $sort = $input->getOption('sort') ?? 'updated';
         $limit = (int) ($input->getOption('limit') ?? self::DEFAULT_LIMIT);
-        
+
         // Validate type option
-        if (!in_array($type, self::VALID_TYPES)) {
+        if (! in_array($type, self::VALID_TYPES)) {
             $type = 'all';
         }
-        
+
         // Validate sort option
-        if (!in_array($sort, self::VALID_SORTS)) {
+        if (! in_array($sort, self::VALID_SORTS)) {
             $sort = 'updated';
         }
-        
+
         // Validate limit (GitHub API allows max 100 per page)
         $limit = max(1, min(self::MAX_LIMIT, $limit));
 
         return [
             'type' => $type,
             'sort' => $sort,
-            'limit' => $limit
+            'limit' => $limit,
         ];
     }
 
     /**
      * Display formatted list of repositories.
-     * 
-     * @param array $repos Array of repository data from GitHub API
-     * @param OutputInterface $output Command output interface
+     *
+     * @param  array  $repos  Array of repository data from GitHub API
+     * @param  OutputInterface  $output  Command output interface
      */
     private function displayRepositories(array $repos, OutputInterface $output): void
     {
@@ -233,7 +238,7 @@ class ReposCommand extends Command
             $visibility = $repo['private'] ? '🔒' : '🌍';
             $language = $repo['language'] ?? null;
             $language = $language ? "({$language})" : '';
-            
+
             $output->writeln(sprintf(
                 '<comment>%d.</comment> %s <info>%s</info> %s',
                 $index + 1,
@@ -241,20 +246,20 @@ class ReposCommand extends Command
                 $repo['full_name'],
                 $language
             ));
-            
-            if (!empty($repo['description'])) {
-                $output->writeln('   ' . $repo['description']);
+
+            if (! empty($repo['description'])) {
+                $output->writeln('   '.$repo['description']);
             }
-            
+
             $output->writeln('');
         }
     }
 
     /**
      * Handle interactive repository selection and cloning.
-     * 
-     * @param array $repos Array of repository data
-     * @param OutputInterface $output Command output interface
+     *
+     * @param  array  $repos  Array of repository data
+     * @param  OutputInterface  $output  Command output interface
      */
     private function handleInteractiveMode(array $repos, OutputInterface $output): void
     {
@@ -276,10 +281,10 @@ class ReposCommand extends Command
             default: true
         )) {
             $output->writeln("<info>🔄 Cloning {$selected}...</info>");
-            
+
             $repoName = basename($selected, '.git');
             exec("git clone {$selected} {$repoName}", $gitOutput, $exitCode);
-            
+
             if ($exitCode === 0) {
                 $output->writeln("<info>✅ Successfully cloned to ./{$repoName}</info>");
             } else {
@@ -290,8 +295,8 @@ class ReposCommand extends Command
 
     /**
      * Map string repository type to RepoType enum.
-     * 
-     * @param string|null $type Repository type string
+     *
+     * @param  string|null  $type  Repository type string
      * @return RepoType Corresponding enum value
      */
     private function mapTypeToEnum(?string $type): RepoType
@@ -307,8 +312,8 @@ class ReposCommand extends Command
 
     /**
      * Map string sort option to Sort enum.
-     * 
-     * @param string|null $sort Sort option string
+     *
+     * @param  string|null  $sort  Sort option string
      * @return Sort Corresponding enum value
      */
     private function mapSortToEnum(?string $sort): Sort

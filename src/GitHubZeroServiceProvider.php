@@ -3,9 +3,10 @@
 namespace JordanPartridge\GitHubZero;
 
 use Illuminate\Support\ServiceProvider;
-use JordanPartridge\GitHubZero\Commands\ReposCommand;
-use JordanPartridge\GitHubZero\Commands\CloneCommand;
 use JordanPartridge\GithubClient\GithubClientServiceProvider;
+use JordanPartridge\GitHubZero\Commands\CloneCommand;
+use JordanPartridge\GitHubZero\Commands\IssuesCommand;
+use JordanPartridge\GitHubZero\Commands\ReposCommand;
 
 class GitHubZeroServiceProvider extends ServiceProvider
 {
@@ -35,6 +36,7 @@ class GitHubZeroServiceProvider extends ServiceProvider
             $this->commands([
                 ReposCommand::class,
                 CloneCommand::class,
+                IssuesCommand::class,
             ]);
         }
     }

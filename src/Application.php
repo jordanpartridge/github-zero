@@ -2,9 +2,10 @@
 
 namespace JordanPartridge\GitHubZero;
 
-use JordanPartridge\GitHubZero\Commands\ReposCommand;
-use JordanPartridge\GitHubZero\Commands\CloneCommand;
 use JordanPartridge\GithubClient\Github;
+use JordanPartridge\GitHubZero\Commands\CloneCommand;
+use JordanPartridge\GitHubZero\Commands\IssuesCommand;
+use JordanPartridge\GitHubZero\Commands\ReposCommand;
 use Symfony\Component\Console\Application as ConsoleApplication;
 
 class Application extends ConsoleApplication
@@ -26,5 +27,6 @@ class Application extends ConsoleApplication
         // Register commands
         $this->add(new ReposCommand($github));
         $this->add(new CloneCommand($github));
+        $this->add(new IssuesCommand($github));
     }
 }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace JordanPartridge\GitHubZero\Commands;
 
 use Symfony\Component\Console\Command\Command;
@@ -25,7 +27,7 @@ class CloneCommand extends Command
     protected function configure(): void
     {
         $this
-            ->setName('clone')
+            ->setName('ghz:clone')
             ->setDescription('Clone a GitHub repository with interactive selection')
             ->addArgument('repo', InputArgument::OPTIONAL, 'Repository name (owner/repo) or URL to clone')
             ->addOption('directory', null, InputOption::VALUE_OPTIONAL, 'Directory to clone into')
@@ -119,18 +121,15 @@ class CloneCommand extends Command
             }
         }
 
-        // Build clone command
-        $command = "git clone {$cloneUrl}";
-        if ($directory) {
-            $command .= " \"{$directory}\"";
-        }
-
-        $output->writeln("<comment>🚀 Running: {$command}</comment>");
+        // Execute clone using Process to prevent shell injection
+        $args = array_filter(['git', 'clone', $cloneUrl, $directory ?: null]);
+        $process = new \Symfony\Component\Process\Process($args);
+        
+        $output->writeln("<comment>🚀 Running: " . implode(' ', $args) . "</comment>");
         $output->writeln('');
-
-        // Execute clone
-        $result = 0;
-        passthru($command, $result);
+        
+        $process->run();
+        $result = $process->getExitCode();
 
         if ($result === 0) {
             $output->writeln("<info>✅ Successfully cloned {$repo}!</info>");

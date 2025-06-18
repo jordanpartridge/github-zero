@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace JordanPartridge\GitHubZero\Commands;
 
 use Symfony\Component\Console\Command\Command;
@@ -25,7 +27,7 @@ class ReposCommand extends Command
     protected function configure(): void
     {
         $this
-            ->setName('repos')
+            ->setName('ghz:repos')
             ->setDescription('List and interact with your GitHub repositories')
             ->addOption('type', null, InputOption::VALUE_OPTIONAL, 'Repository type (all, owner, public, private, member)')
             ->addOption('sort', null, InputOption::VALUE_OPTIONAL, 'Sort repositories by (created, updated, pushed, full_name)')

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace JordanPartridge\GitHubZero\Components;
 
 use JordanPartridge\GithubClient\Github;

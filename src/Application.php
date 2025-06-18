@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace JordanPartridge\GitHubZero;
 
 use JordanPartridge\GithubClient\Github;
@@ -24,9 +26,17 @@ class Application extends ConsoleApplication
         $connector = new \JordanPartridge\GithubClient\GithubConnector($token);
         $github = new Github($connector);
 
-        // Register commands
-        $this->add(new ReposCommand($github));
-        $this->add(new CloneCommand($github));
-        $this->add(new IssuesCommand($github));
+        // Register commands with standalone names
+        $reposCommand = new ReposCommand($github);
+        $reposCommand->setName('repos');
+        $this->add($reposCommand);
+        
+        $cloneCommand = new CloneCommand($github);
+        $cloneCommand->setName('clone');
+        $this->add($cloneCommand);
+        
+        $issuesCommand = new IssuesCommand($github);
+        $issuesCommand->setName('issues');
+        $this->add($issuesCommand);
     }
 }

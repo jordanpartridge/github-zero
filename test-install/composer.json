@@ -1,0 +1,5 @@
+{
+    "require": {
+        "jordanpartridge/github-zero": "^1.0.4"
+    }
+}

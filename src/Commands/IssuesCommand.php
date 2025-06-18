@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace JordanPartridge\GitHubZero\Commands;
 
 use JordanPartridge\GithubClient\Github;
@@ -31,7 +33,7 @@ class IssuesCommand extends Command
     protected function configure(): void
     {
         $this
-            ->setName('issues')
+            ->setName('ghz:issues')
             ->setDescription('Create, list, and manage GitHub issues')
             ->addArgument('action', InputArgument::OPTIONAL, 'Action to perform (list, create, show)', 'list')
             ->addArgument('repository', InputArgument::OPTIONAL, 'Repository name (owner/repo or current directory)')

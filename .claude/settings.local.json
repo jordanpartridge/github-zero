@@ -55,7 +55,12 @@
       "Bash(./vendor/bin/pint:*)",
       "Bash(./vendor/bin/phpstan:*)",
       "Bash(GITHUB_TOKEN=$GITHUB_TOKEN ./bin/github repos --limit=2 --format=json)",
-      "Bash(./bin/github clone:*)"
+      "Bash(./bin/github clone:*)",
+      "Bash(git reset:*)",
+      "Bash(gh pr edit:*)",
+      "Bash(gh pr checks:*)",
+      "Bash(gh release delete:*)",
+      "Bash(GITHUB_TOKEN=\"$GITHUB_TOKEN\" ./bin/github repos --limit=2 --format=json)"
     ],
     "deny": []
   }

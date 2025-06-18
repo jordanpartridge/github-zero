@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace JordanPartridge\GitHubZero\Components;
 
 class CloneComponent extends AbstractGitHubComponent
@@ -78,16 +80,15 @@ class CloneComponent extends AbstractGitHubComponent
             throw new \Exception("Directory '{$directory}' already exists. Use force parameter to override.");
         }
 
-        // Build clone command
-        $command = "git clone {$cloneUrl}";
-        if ($directory) {
-            $command .= " \"{$directory}\"";
-        }
+        // Build clone command safely using Symfony Process
+        $args = array_filter(['git', 'clone', $cloneUrl, $directory ?: null]);
 
-        // Execute clone
-        $output = [];
-        $exitCode = 0;
-        exec($command.' 2>&1', $output, $exitCode);
+        // Execute clone using Process to prevent shell injection
+        $process = new \Symfony\Component\Process\Process($args);
+        $process->run();
+
+        $exitCode = $process->getExitCode();
+        $output = array_filter(explode("\n", $process->getOutput().$process->getErrorOutput()));
 
         if ($exitCode !== 0) {
             $errorOutput = implode("\n", $output);
@@ -110,7 +111,7 @@ class CloneComponent extends AbstractGitHubComponent
             'repository' => $repository,
             'clone_url' => $cloneUrl,
             'directory' => $directory,
-            'command' => $command,
+            'command' => implode(' ', $args),
             'output' => $output,
             'success' => true,
         ];

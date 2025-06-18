@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace JordanPartridge\GitHubZero\Commands;
 
 use JordanPartridge\GithubClient\Github;
@@ -44,7 +46,7 @@ class CloneCommand extends Command
     protected function configure(): void
     {
         $this
-            ->setName('clone')
+            ->setName('ghz:clone')
             ->setDescription('Clone a GitHub repository with interactive selection')
             ->addArgument('repo', InputArgument::OPTIONAL, 'Repository name (owner/repo) or URL to clone')
             ->addOption('directory', null, InputOption::VALUE_OPTIONAL, 'Directory to clone into')

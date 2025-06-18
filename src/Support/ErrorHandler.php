@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace JordanPartridge\GitHubZero\Support;
 
 use Symfony\Component\Console\Output\OutputInterface;

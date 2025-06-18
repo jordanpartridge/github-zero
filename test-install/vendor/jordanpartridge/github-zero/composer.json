@@ -1,0 +1,70 @@
+{
+    "name": "jordanpartridge/github-zero",
+    "description": "Lightweight GitHub CLI that works standalone, in Laravel, Laravel Zero, or as a Conduit extension",
+    "keywords": ["github", "cli", "laravel", "laravel-zero", "conduit", "conduit-extension", "git"],
+    "homepage": "https://github.com/jordanpartridge/github-zero",
+    "license": "MIT",
+    "type": "library",
+    "authors": [
+        {
+            "name": "Jordan Partridge",
+            "email": "jordan@example.com"
+        }
+    ],
+    "require": {
+        "php": "^8.2",
+        "jordanpartridge/github-client": "^0.3.1|^2.0.0",
+        "illuminate/console": "^8.0|^9.0|^10.0|^11.0",
+        "illuminate/collections": "^8.0|^9.0|^10.0|^11.0",
+        "laravel/prompts": "^0.1|^0.3",
+        "nesbot/carbon": "^2.0|^3.0",
+        "symfony/console": "^6.0|^7.0"
+    },
+    "require-dev": {
+        "laravel/pint": "^1.18",
+        "pestphp/pest": "^3.0",
+        "phpstan/phpstan": "^1.12"
+    },
+    "autoload": {
+        "psr-4": {
+            "JordanPartridge\\GitHubZero\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "JordanPartridge\\GitHubZero\\Tests\\": "tests/"
+        }
+    },
+    "bin": ["bin/github"],
+    "extra": {
+        "laravel": {
+            "providers": [
+                "JordanPartridge\\GitHubZero\\GitHubZeroServiceProvider"
+            ]
+        },
+        "conduit": {
+            "extension": "JordanPartridge\\GitHubZero\\ConduitExtension"
+        }
+    },
+    "scripts": {
+        "test": "pest",
+        "lint": "pint",
+        "lint:fix": "pint --dirty",
+        "analyse": "phpstan analyse src --level=max",
+        "quality": [
+            "@lint",
+            "@analyse",
+            "@test"
+        ]
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "preferred-install": "dist",
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

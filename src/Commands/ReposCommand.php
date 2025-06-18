@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace JordanPartridge\GitHubZero\Commands;
 
 use JordanPartridge\GithubClient\Github;
@@ -57,7 +59,7 @@ class ReposCommand extends Command
     protected function configure(): void
     {
         $this
-            ->setName('repos')
+            ->setName('ghz:repos')
             ->setDescription('List and interact with your GitHub repositories')
             ->addOption('type', null, InputOption::VALUE_OPTIONAL, 'Repository type (all, owner, public, private, member)')
             ->addOption('sort', null, InputOption::VALUE_OPTIONAL, 'Sort repositories by (created, updated, pushed, full_name)')
@@ -79,7 +81,7 @@ class ReposCommand extends Command
 
         $this->displayWelcome($output);
 
-        $options = $this->getFilterOptions($input, $output);
+        $options = $this->getFilterOptions($input);
 
         try {
             // Use component for data fetching
@@ -123,16 +125,6 @@ class ReposCommand extends Command
     }
 
     /**
-     * Check if a GitHub token is available in environment variables.
-     *
-     * @return bool True if token exists, false otherwise
-     */
-    private function hasGitHubToken(): bool
-    {
-        return ! empty($_ENV['GITHUB_TOKEN']) || ! empty(getenv('GITHUB_TOKEN'));
-    }
-
-    /**
      * Display welcome message and header.
      *
      * @param  OutputInterface  $output  Command output interface
@@ -149,10 +141,9 @@ class ReposCommand extends Command
      * Get repository filter options from user input or interactive prompts.
      *
      * @param  InputInterface  $input  Command input
-     * @param  OutputInterface  $output  Command output
      * @return array{type: string, sort: string, limit: int} Filter options
      */
-    private function getFilterOptions(InputInterface $input, OutputInterface $output): array
+    private function getFilterOptions(InputInterface $input): array
     {
         if ($input->getOption('interactive')) {
             return [

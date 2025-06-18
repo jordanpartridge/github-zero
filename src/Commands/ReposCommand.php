@@ -2,9 +2,10 @@
 
 namespace JordanPartridge\GitHubZero\Commands;
 
-use JordanPartridge\GithubClient\Enums\Repos\Type as RepoType;
-use JordanPartridge\GithubClient\Enums\Sort;
 use JordanPartridge\GithubClient\Github;
+use JordanPartridge\GitHubZero\Components\ReposComponent;
+use JordanPartridge\GitHubZero\Support\ComponentResult;
+use JordanPartridge\GitHubZero\Support\ErrorHandler;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -43,8 +44,10 @@ class ReposCommand extends Command
      * @param  Github  $github  The GitHub client instance
      */
     public function __construct(
-        protected Github $github
+        protected Github $github,
+        protected ?ReposComponent $component = null
     ) {
+        $this->component = $component ?? new ReposComponent($github);
         parent::__construct();
     }
 
@@ -59,7 +62,8 @@ class ReposCommand extends Command
             ->addOption('type', null, InputOption::VALUE_OPTIONAL, 'Repository type (all, owner, public, private, member)')
             ->addOption('sort', null, InputOption::VALUE_OPTIONAL, 'Sort repositories by (created, updated, pushed, full_name)')
             ->addOption('limit', null, InputOption::VALUE_OPTIONAL, 'Number of repositories to display', (string) self::DEFAULT_LIMIT)
-            ->addOption('interactive', null, InputOption::VALUE_NONE, 'Use interactive prompts');
+            ->addOption('interactive', null, InputOption::VALUE_NONE, 'Use interactive prompts')
+            ->addOption('format', null, InputOption::VALUE_OPTIONAL, 'Output format (json, text)', 'text');
     }
 
     /**
@@ -71,48 +75,38 @@ class ReposCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        if (! $this->hasGitHubToken()) {
-            $output->writeln('<error>🚫 No GitHub token found!</error>');
-            $output->writeln('<comment>💡 Set GITHUB_TOKEN environment variable</comment>');
-
-            return 1;
-        }
+        // Token validation is now handled by the component
 
         $this->displayWelcome($output);
 
         $options = $this->getFilterOptions($input, $output);
 
         try {
-            $repos = spin(
-                fn () => $this->github->repos()->all(
-                    type: $this->mapTypeToEnum($options['type']),
-                    sort: $this->mapSortToEnum($options['sort']),
-                    per_page: $options['limit']
-                )->json(),
+            // Use component for data fetching
+            $result = spin(
+                fn () => $this->component->execute($options),
                 '🔍 Fetching your repositories...'
             );
 
-            // Check for API errors
-            if (is_array($repos) && isset($repos['message'])) {
-                $output->writeln('<error>❌ GitHub API Error: '.$repos['message'].'</error>');
-                if (isset($repos['documentation_url'])) {
-                    $output->writeln('<comment>📖 See: '.$repos['documentation_url'].'</comment>');
-                }
+            if (! ComponentResult::isSuccess($result)) {
+                $output->writeln('<error>❌ '.ComponentResult::getError($result).'</error>');
 
-                return 1;
+                return ComponentResult::getErrorCode($result);
             }
 
-            if (empty($repos) || ! is_array($repos)) {
+            $repos = ComponentResult::getData($result);
+
+            if (empty($repos)) {
                 $output->writeln('<comment>📭 No repositories found matching your criteria.</comment>');
 
                 return 0;
             }
 
-            // Check if it's a valid repo array (should have numeric indices)
-            if (! isset($repos[0])) {
-                $output->writeln('<error>❌ Unexpected API response format</error>');
+            // Handle JSON output format
+            if ($input->getOption('format') === 'json') {
+                $output->writeln(json_encode($repos, JSON_PRETTY_PRINT));
 
-                return 1;
+                return 0;
             }
 
             $this->displayRepositories($repos, $output);
@@ -122,9 +116,7 @@ class ReposCommand extends Command
             }
 
         } catch (\Exception $e) {
-            $output->writeln('<error>❌ Error fetching repositories: '.$e->getMessage().'</error>');
-
-            return 1;
+            return ErrorHandler::handle($e, $output);
         }
 
         return 0;
@@ -220,6 +212,7 @@ class ReposCommand extends Command
             'type' => $type,
             'sort' => $sort,
             'limit' => $limit,
+            'format' => $input->getOption('format') ?? 'text',
         ];
     }
 
@@ -291,39 +284,5 @@ class ReposCommand extends Command
                 $output->writeln('<error>❌ Failed to clone repository</error>');
             }
         }
-    }
-
-    /**
-     * Map string repository type to RepoType enum.
-     *
-     * @param  string|null  $type  Repository type string
-     * @return RepoType Corresponding enum value
-     */
-    private function mapTypeToEnum(?string $type): RepoType
-    {
-        return match ($type) {
-            'owner' => RepoType::Owner,
-            'public' => RepoType::Public,
-            'private' => RepoType::Private,
-            'member' => RepoType::Member,
-            default => RepoType::All,
-        };
-    }
-
-    /**
-     * Map string sort option to Sort enum.
-     *
-     * @param  string|null  $sort  Sort option string
-     * @return Sort Corresponding enum value
-     */
-    private function mapSortToEnum(?string $sort): Sort
-    {
-        return match ($sort) {
-            'created' => Sort::CREATED,
-            'updated' => Sort::UPDATED,
-            'pushed' => Sort::PUSHED,
-            'full_name' => Sort::FULL_NAME,
-            default => Sort::UPDATED,
-        };
     }
 }

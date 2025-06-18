@@ -3,6 +3,9 @@
 namespace JordanPartridge\GitHubZero\Commands;
 
 use JordanPartridge\GithubClient\Github;
+use JordanPartridge\GitHubZero\Components\CloneComponent;
+use JordanPartridge\GitHubZero\Support\ComponentResult;
+use JordanPartridge\GitHubZero\Support\ErrorHandler;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -28,8 +31,10 @@ class CloneCommand extends Command
      * @param  Github  $github  The GitHub client instance
      */
     public function __construct(
-        protected Github $github
+        protected Github $github,
+        protected ?CloneComponent $component = null
     ) {
+        $this->component = $component ?? new CloneComponent($github);
         parent::__construct();
     }
 
@@ -43,7 +48,8 @@ class CloneCommand extends Command
             ->setDescription('Clone a GitHub repository with interactive selection')
             ->addArgument('repo', InputArgument::OPTIONAL, 'Repository name (owner/repo) or URL to clone')
             ->addOption('directory', null, InputOption::VALUE_OPTIONAL, 'Directory to clone into')
-            ->addOption('interactive', null, InputOption::VALUE_NONE, 'Use interactive selection');
+            ->addOption('interactive', null, InputOption::VALUE_NONE, 'Use interactive selection')
+            ->addOption('format', null, InputOption::VALUE_OPTIONAL, 'Output format (json, text)', 'text');
     }
 
     /**
@@ -55,12 +61,7 @@ class CloneCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        if (! $this->hasGitHubToken()) {
-            $output->writeln('<error>🚫 No GitHub token found!</error>');
-            $output->writeln('<comment>💡 Set GITHUB_TOKEN environment variable</comment>');
-
-            return 1;
-        }
+        // Token validation is now handled by the component
 
         $this->displayWelcome($output);
 
@@ -76,7 +77,50 @@ class CloneCommand extends Command
             return 0;
         }
 
-        return $this->cloneRepository($repo, $input, $output);
+        return $this->cloneRepositoryWithComponent($repo, $input, $output);
+    }
+
+    /**
+     * Clone repository using component.
+     */
+    private function cloneRepositoryWithComponent(string $repo, InputInterface $input, OutputInterface $output): int
+    {
+        try {
+            $params = [
+                'repository' => $repo,
+                'directory' => $input->getOption('directory'),
+                'force' => false,
+                'format' => $input->getOption('format') ?? 'text',
+            ];
+
+            $result = $this->component->execute($params);
+
+            if (! ComponentResult::isSuccess($result)) {
+                $output->writeln('<error>❌ '.ComponentResult::getError($result).'</error>');
+
+                return ComponentResult::getErrorCode($result);
+            }
+
+            $data = ComponentResult::getData($result);
+
+            // Handle JSON output format
+            if ($input->getOption('format') === 'json') {
+                $output->writeln(json_encode($data, JSON_PRETTY_PRINT));
+
+                return 0;
+            }
+
+            $output->writeln("<info>✅ Successfully cloned {$data['repository']}!</info>");
+
+            if ($data['directory'] && is_dir($data['directory']) && confirm("📂 Open {$data['directory']} in your editor?", false)) {
+                $this->tryOpenInEditor($data['directory'], $output);
+            }
+
+            return 0;
+
+        } catch (\Exception $e) {
+            return ErrorHandler::handle($e, $output);
+        }
     }
 
     /**
@@ -183,21 +227,7 @@ class CloneCommand extends Command
             $output->writeln("<info>✅ Successfully cloned {$repo}!</info>");
 
             if ($directory && is_dir($directory) && confirm("📂 Open {$directory} in your editor?", false)) {
-                // Try common editors
-                $editors = ['code', 'vim', 'nano'];
-                $editorOpened = false;
-
-                foreach ($editors as $editor) {
-                    if (shell_exec("which {$editor}")) {
-                        exec("{$editor} \"{$directory}\" &");
-                        $editorOpened = true;
-                        break;
-                    }
-                }
-
-                if (! $editorOpened) {
-                    $output->writeln("<comment>💡 No supported editor found. Try: cd \"{$directory}\"</comment>");
-                }
+                $this->tryOpenInEditor($directory, $output);
             }
         } else {
             $output->writeln("<error>💥 Failed to clone {$repo}</error>");
@@ -256,6 +286,27 @@ class CloneCommand extends Command
         $basename = basename($repo);
 
         return str_replace('.git', '', $basename);
+    }
+
+    /**
+     * Try to open directory in available editor.
+     */
+    private function tryOpenInEditor(string $directory, OutputInterface $output): void
+    {
+        $editors = ['code', 'vim', 'nano'];
+        $editorOpened = false;
+
+        foreach ($editors as $editor) {
+            if (shell_exec("which {$editor}")) {
+                exec("{$editor} \"{$directory}\" &");
+                $editorOpened = true;
+                break;
+            }
+        }
+
+        if (! $editorOpened) {
+            $output->writeln("<comment>💡 No supported editor found. Try: cd \"{$directory}\"</comment>");
+        }
     }
 
     /**

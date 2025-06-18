@@ -3,6 +3,9 @@
 namespace JordanPartridge\GitHubZero\Commands;
 
 use JordanPartridge\GithubClient\Github;
+use JordanPartridge\GitHubZero\Components\IssuesComponent;
+use JordanPartridge\GitHubZero\Support\ComponentResult;
+use JordanPartridge\GitHubZero\Support\ErrorHandler;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -18,8 +21,10 @@ class IssuesCommand extends Command
     protected static $defaultDescription = 'Create, list, and manage GitHub issues';
 
     public function __construct(
-        protected Github $github
+        protected Github $github,
+        protected ?IssuesComponent $component = null
     ) {
+        $this->component = $component ?? new IssuesComponent($github);
         parent::__construct();
     }
 
@@ -42,21 +47,58 @@ class IssuesCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        if (! $this->hasGitHubToken()) {
-            $output->writeln('<error>🚫 No GitHub token found!</error>');
-            $output->writeln('<comment>💡 Set GITHUB_TOKEN environment variable</comment>');
+        // Token validation is now handled by the component
 
+        $action = $input->getArgument('action');
+        $repository = $this->getRepository($input, $output);
+
+        if (! $repository) {
             return 1;
         }
 
-        $action = $input->getArgument('action');
+        try {
+            $params = [
+                'action' => $action,
+                'repository' => $repository,
+                'number' => $input->getArgument('number'),
+                'title' => $input->getOption('title'),
+                'body' => $input->getOption('body'),
+                'labels' => $input->getOption('labels') ? explode(',', $input->getOption('labels')) : null,
+                'assignees' => $input->getOption('assignees') ? explode(',', $input->getOption('assignees')) : null,
+                'state' => $input->getOption('state'),
+                'limit' => (int) $input->getOption('limit'),
+                'format' => $input->getOption('format'),
+            ];
 
-        return match ($action) {
-            'list' => $this->listIssues($input, $output),
-            'create' => $this->createIssue($input, $output),
-            'show' => $this->showIssue($input, $output),
-            default => $this->handleUnknownAction($output, $action)
-        };
+            $result = spin(
+                fn () => $this->component->execute($params),
+                match ($action) {
+                    'list' => '🔍 Fetching issues...',
+                    'create' => '🔄 Creating issue...',
+                    'show' => '🔍 Fetching issue...',
+                    default => '🔄 Processing...',
+                }
+            );
+
+            if (! ComponentResult::isSuccess($result)) {
+                $output->writeln('<error>❌ '.ComponentResult::getError($result).'</error>');
+
+                return ComponentResult::getErrorCode($result);
+            }
+
+            $data = ComponentResult::getData($result);
+
+            if ($input->getOption('format') === 'json') {
+                $output->writeln(json_encode($data, JSON_PRETTY_PRINT));
+            } else {
+                $this->displayResults($action, $data, $output);
+            }
+
+            return 0;
+
+        } catch (\Exception $e) {
+            return ErrorHandler::handle($e, $output);
+        }
     }
 
     private function hasGitHubToken(): bool
@@ -64,137 +106,63 @@ class IssuesCommand extends Command
         return ! empty($_ENV['GITHUB_TOKEN'] ?? getenv('GITHUB_TOKEN'));
     }
 
-    private function handleUnknownAction(OutputInterface $output, string $action): int
+    /**
+     * Display results based on action type.
+     */
+    private function displayResults(string $action, array $data, OutputInterface $output): void
     {
-        $output->writeln("<error>❌ Unknown action: {$action}. Use: list, create, show</error>");
-
-        return 1;
+        match ($action) {
+            'list' => $this->displayIssuesList($data, $output),
+            'create' => $this->displayCreatedIssue($data, $output),
+            'show' => $this->displayIssueDetails($data, $output),
+            default => $output->writeln('<comment>Results processed successfully.</comment>'),
+        };
     }
 
-    private function listIssues(InputInterface $input, OutputInterface $output): int
+    /**
+     * Display list of issues.
+     */
+    private function displayIssuesList(array $issues, OutputInterface $output): void
     {
-        $repository = $this->getRepository($input, $output);
-        if (! $repository) {
-            return 1;
+        $output->writeln('<info>🐛 GitHub Issues</info>');
+        $output->writeln('<info>═══════════════════</info>');
+        $output->writeln('');
+
+        if (empty($issues)) {
+            $output->writeln('<info>📭 No issues found</info>');
+
+            return;
         }
 
-        if ($input->getOption('format') === 'text') {
-            $output->writeln('<info>🐛 GitHub Issues</info>');
-            $output->writeln('<info>═══════════════════</info>');
+        foreach ($issues as $index => $issue) {
+            $stateEmoji = $issue['state'] === 'open' ? '🟢' : '🔴';
+            $labels = ! empty($issue['labels']) ? implode(', ', array_column($issue['labels'], 'name')) : '';
+
+            $output->writeln(sprintf(
+                '%d. %s #%d: %s',
+                $index + 1,
+                $stateEmoji,
+                $issue['number'],
+                $issue['title']
+            ));
+
+            if ($labels) {
+                $output->writeln("   🏷️  {$labels}");
+            }
+
+            $output->writeln("   👤 {$issue['user']['login']} • {$issue['created_at']}");
             $output->writeln('');
         }
-
-        try {
-            $issues = spin(
-                fn () => $this->github->issues()->all($repository, [
-                    'state' => $input->getOption('state'),
-                    'per_page' => (int) $input->getOption('limit'),
-                ]),
-                '🔍 Fetching issues...'
-            );
-
-            if ($input->getOption('format') === 'json') {
-                $output->writeln(json_encode(array_map(fn ($issue) => $issue->toArray(), $issues), JSON_PRETTY_PRINT));
-
-                return 0;
-            }
-
-            $this->displayIssues($output, $issues);
-
-            return 0;
-
-        } catch (\Exception $e) {
-            $output->writeln("<error>❌ Error fetching issues: {$e->getMessage()}</error>");
-
-            return 1;
-        }
     }
 
-    private function createIssue(InputInterface $input, OutputInterface $output): int
+    /**
+     * Display created issue.
+     */
+    private function displayCreatedIssue(array $issue, OutputInterface $output): void
     {
-        $repository = $this->getRepository($input, $output);
-        if (! $repository) {
-            return 1;
-        }
-
-        $title = $input->getOption('title');
-        if (! $title) {
-            $output->writeln('<error>❌ Title is required for creating issues</error>');
-            $output->writeln('<comment>💡 Use --title="Your issue title"</comment>');
-
-            return 1;
-        }
-
-        try {
-            $data = [
-                'title' => $title,
-                'body' => $input->getOption('body') ?? '',
-            ];
-
-            if ($labels = $input->getOption('labels')) {
-                $data['labels'] = explode(',', $labels);
-            }
-
-            if ($assignees = $input->getOption('assignees')) {
-                $data['assignees'] = explode(',', $assignees);
-            }
-
-            $issue = spin(
-                fn () => $this->github->issues()->create($repository, $data['title'], $data['body'], $data),
-                '🔄 Creating issue...'
-            );
-
-            if ($input->getOption('format') === 'json') {
-                $output->writeln(json_encode($issue->toArray(), JSON_PRETTY_PRINT));
-            } else {
-                $output->writeln('<info>✅ Issue created successfully!</info>');
-                $output->writeln("🔗 {$issue->html_url}");
-                $output->writeln("📋 #{$issue->number}: {$issue->title}");
-            }
-
-            return 0;
-
-        } catch (\Exception $e) {
-            $output->writeln("<error>❌ Error creating issue: {$e->getMessage()}</error>");
-
-            return 1;
-        }
-    }
-
-    private function showIssue(InputInterface $input, OutputInterface $output): int
-    {
-        $repository = $this->getRepository($input, $output);
-        if (! $repository) {
-            return 1;
-        }
-
-        $number = $input->getArgument('number');
-        if (! $number) {
-            $output->writeln('<error>❌ Issue number is required</error>');
-            $output->writeln('<comment>💡 Usage: github issues show owner/repo 123</comment>');
-
-            return 1;
-        }
-
-        try {
-            $issue = spin(
-                fn () => $this->github->issues()->get($repository, (int) $number),
-                '🔍 Fetching issue...'
-            );
-
-            if ($input->getOption('format') === 'json') {
-                $output->writeln(json_encode($issue->toArray(), JSON_PRETTY_PRINT));
-            } else {
-                $this->displayIssueDetails($output, $issue);
-            }
-
-            return 0;
-
-        } catch (\Exception $e) {
-            $output->writeln("<error>❌ Error fetching issue: {$e->getMessage()}</error>");
-
-            return 1;
-        }
+        $output->writeln('<info>✅ Issue created successfully!</info>');
+        $output->writeln("🔗 {$issue['html_url']}");
+        $output->writeln("📋 #{$issue['number']}: {$issue['title']}");
     }
 
     private function getRepository(InputInterface $input, OutputInterface $output): ?string
@@ -220,60 +188,34 @@ class IssuesCommand extends Command
         return null;
     }
 
-    private function displayIssues(OutputInterface $output, array $issues): void
+    /**
+     * Display detailed issue information.
+     */
+    private function displayIssueDetails(array $issue, OutputInterface $output): void
     {
-        if (empty($issues)) {
-            $output->writeln('<info>📭 No issues found</info>');
+        $stateEmoji = $issue['state'] === 'open' ? '🟢 Open' : '🔴 Closed';
 
-            return;
-        }
-
-        foreach ($issues as $index => $issue) {
-            $stateEmoji = $issue->state === 'open' ? '🟢' : '🔴';
-            $labels = ! empty($issue->labels) ? implode(', ', array_column($issue->labels, 'name')) : '';
-
-            $output->writeln(sprintf(
-                '%d. %s #%d: %s',
-                $index + 1,
-                $stateEmoji,
-                $issue->number,
-                $issue->title
-            ));
-
-            if ($labels) {
-                $output->writeln("   🏷️  {$labels}");
-            }
-
-            $output->writeln("   👤 {$issue->user->login} • {$issue->created_at}");
-            $output->writeln('');
-        }
-    }
-
-    private function displayIssueDetails(OutputInterface $output, $issue): void
-    {
-        $stateEmoji = $issue->state === 'open' ? '🟢 Open' : '🔴 Closed';
-
-        $output->writeln("📋 Issue #{$issue->number}");
+        $output->writeln("📋 Issue #{$issue['number']}");
         $output->writeln('═══════════════════');
-        $output->writeln("📝 Title: {$issue->title}");
-        $output->writeln("🔗 URL: {$issue->html_url}");
+        $output->writeln("📝 Title: {$issue['title']}");
+        $output->writeln("🔗 URL: {$issue['html_url']}");
         $output->writeln("📊 State: {$stateEmoji}");
-        $output->writeln("👤 Author: {$issue->user->login}");
-        $output->writeln("📅 Created: {$issue->created_at}");
+        $output->writeln("👤 Author: {$issue['user']['login']}");
+        $output->writeln("📅 Created: {$issue['created_at']}");
 
-        if (! empty($issue->labels)) {
-            $labels = implode(', ', array_column($issue->labels, 'name'));
+        if (! empty($issue['labels'])) {
+            $labels = implode(', ', array_column($issue['labels'], 'name'));
             $output->writeln("🏷️  Labels: {$labels}");
         }
 
-        if (! empty($issue->assignees)) {
-            $assignees = implode(', ', array_map(fn ($a) => $a->login, $issue->assignees));
+        if (! empty($issue['assignees'])) {
+            $assignees = implode(', ', array_column($issue['assignees'], 'login'));
             $output->writeln("👥 Assignees: {$assignees}");
         }
 
         $output->writeln('');
         $output->writeln('<info>📄 Description:</info>');
         $output->writeln('───────────────');
-        $output->writeln($issue->body ?? 'No description provided.');
+        $output->writeln($issue['body'] ?? 'No description provided.');
     }
 }

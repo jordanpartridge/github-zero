@@ -16,7 +16,7 @@
         "jordanpartridge/github-client": "^2.0.0",
         "illuminate/console": "^11.0",
         "illuminate/collections": "^11.0",
-        "laravel/prompts": "^0.1",
+        "laravel/prompts": "^0.1|^0.3",
         "nesbot/carbon": "^3.0",
         "symfony/console": "^6.0|^7.0"
     },

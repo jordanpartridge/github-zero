@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c7ea7480b5e03d9356063e1b9bb4cb39",
+    "content-hash": "7f15648b342149ed38e9e8dff6d28fec",
     "packages": [
         {
             "name": "amphp/amp",
@@ -2060,16 +2060,16 @@
         },
         {
             "name": "jordanpartridge/github-client",
-            "version": "v2.0.0",
+            "version": "v2.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/jordanpartridge/github-client.git",
-                "reference": "cc2f9bf8f16c6f8d79e176a5217121745c4c3ac7"
+                "reference": "3b3aecdbe94f39332beca8795f47e2e339fe1bb7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/jordanpartridge/github-client/zipball/cc2f9bf8f16c6f8d79e176a5217121745c4c3ac7",
-                "reference": "cc2f9bf8f16c6f8d79e176a5217121745c4c3ac7",
+                "url": "https://api.github.com/repos/jordanpartridge/github-client/zipball/3b3aecdbe94f39332beca8795f47e2e339fe1bb7",
+                "reference": "3b3aecdbe94f39332beca8795f47e2e339fe1bb7",
                 "shasum": ""
             },
             "require": {
@@ -2128,7 +2128,7 @@
             ],
             "support": {
                 "issues": "https://github.com/jordanpartridge/github-client/issues",
-                "source": "https://github.com/jordanpartridge/github-client/tree/v2.0.0"
+                "source": "https://github.com/jordanpartridge/github-client/tree/v2.2.0"
             },
             "funding": [
                 {
@@ -2136,7 +2136,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2025-06-14T05:55:20+00:00"
+            "time": "2025-06-27T04:44:15+00:00"
         },
         {
             "name": "kelunik/certificate",

@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(./bin/github:*)",
+      "Bash(mkdir:*)",
+      "Bash(./vendor/bin/pest)",
+      "Bash(composer quality:*)",
+      "Bash(gh:*)",
+      "Bash(php:*)",
+      "Bash(find:*)",
+      "Bash(ls:*)"
+    ],
+    "deny": []
+  }
+}

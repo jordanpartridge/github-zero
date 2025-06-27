@@ -217,10 +217,6 @@ class ReposCommand extends Command
     
     private function buildSearchQuery(array $options): ?string
     {
-        // Disable search in standalone mode due to Laravel dependency issues
-        if (!function_exists('config')) {
-            return null;
-        }
         
         $queryParts = [];
         

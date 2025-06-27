@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace JordanPartridge\GitHubZero;
 
+use ConduitUi\GitHubConnector\GithubConnector;
 use JordanPartridge\GithubClient\Github;
-use JordanPartridge\GithubClient\GithubConnector;
 use Symfony\Component\Console\Application as ConsoleApplication;
 
 class Application extends ConsoleApplication

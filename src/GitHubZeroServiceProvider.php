@@ -25,12 +25,9 @@ class GitHubZeroServiceProvider extends ServiceProvider
     {
         if ($this->app->runningInConsole()) {
             $this->commands([
-                Commands\ListCommand::class,
-                Commands\RepoCommand::class,
-                Commands\IssueCommand::class,
-                Commands\ReposCommand::class,
-                Commands\CloneCommand::class,
-                Commands\IssuesCommand::class,
+                Commands\Repos::class,
+                Commands\CloneRepo::class,
+                Commands\Issues::class,
             ]);
         }
     }

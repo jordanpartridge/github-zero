@@ -18,7 +18,7 @@ use function Laravel\Prompts\select;
 use function Laravel\Prompts\spin;
 use function Laravel\Prompts\text;
 
-class ReposCommand extends Command
+class Repos extends Command
 {
     public function __construct(
         protected Github $github
@@ -29,8 +29,8 @@ class ReposCommand extends Command
     protected function configure(): void
     {
         $this
-            ->setName('repo:list')
-            ->setDescription('List and interact with your GitHub repositories')
+            ->setName('repos')
+            ->setDescription('List your GitHub repositories')
             ->addOption('type', null, InputOption::VALUE_OPTIONAL, 'Repository type (all, owner, public, private, member)')
             ->addOption('sort', null, InputOption::VALUE_OPTIONAL, 'Sort repositories by (created, updated, pushed, full_name)')
             ->addOption('limit', null, InputOption::VALUE_OPTIONAL, 'Number of repositories to display', '10')
@@ -62,6 +62,7 @@ class ReposCommand extends Command
 
             if (empty($repos)) {
                 $output->writeln('<comment>📭 No repositories found.</comment>');
+
                 return 0;
             }
 
@@ -93,11 +94,23 @@ class ReposCommand extends Command
         $output->writeln('');
     }
 
+    /**
+     * @return array{
+     *     type: string,
+     *     sort: string,
+     *     limit: int,
+     *     language: string|null,
+     *     stars: int|null,
+     *     active: int|null,
+     *     search: string|null,
+     *     query: string|null,
+     * }
+     */
     private function getFilterOptions(InputInterface $input, OutputInterface $output): array
     {
         if ($input->getOption('interactive')) {
             $options = [
-                'type' => select(
+                'type' => (string) select(
                     label: '📋 What type of repositories?',
                     options: [
                         'all' => 'All repositories',
@@ -108,7 +121,7 @@ class ReposCommand extends Command
                     ],
                     default: 'all'
                 ),
-                'sort' => select(
+                'sort' => (string) select(
                     label: '🔄 How should we sort them?',
                     options: [
                         'updated' => 'Recently updated',
@@ -126,28 +139,28 @@ class ReposCommand extends Command
                         '20' => '20 repositories',
                         '50' => '50 repositories',
                     ],
-                    default: $input->getOption('limit') ?? '10'
+                    default: (string) ($input->getOption('limit') ?? '10')
                 ),
             ];
 
             // Advanced filtering options
             if (confirm('🎯 Apply advanced filters?', false)) {
-                $language = text('🔤 Filter by language (optional):', default: '');
+                $language = (string) text('🔤 Filter by language (optional):', default: '');
                 if ($language) {
                     $options['language'] = $language;
                 }
 
-                $stars = text('⭐ Minimum stars (optional):', default: '');
+                $stars = (string) text('⭐ Minimum stars (optional):', default: '');
                 if ($stars && is_numeric($stars)) {
                     $options['stars'] = (int) $stars;
                 }
 
-                $search = text('🔍 Search term (optional):', default: '');
+                $search = (string) text('🔍 Search term (optional):', default: '');
                 if ($search) {
                     $options['search'] = $search;
                 }
 
-                $query = text('🤖 Natural language query (optional):',
+                $query = (string) text('🤖 Natural language query (optional):',
                     placeholder: 'e.g., "python projects with 10+ stars updated recently"',
                     default: ''
                 );
@@ -159,15 +172,19 @@ class ReposCommand extends Command
             return $options;
         }
 
+        $limit = $input->getOption('limit');
+        $stars = $input->getOption('stars');
+        $active = $input->getOption('active');
+
         return [
-            'type' => $input->getOption('type') ?? 'all',
-            'sort' => $input->getOption('sort') ?? 'updated',
-            'limit' => (int) ($input->getOption('limit') ?? 10),
-            'language' => $input->getOption('language'),
-            'stars' => $input->getOption('stars') ? (int) $input->getOption('stars') : null,
-            'active' => $input->getOption('active') ? (int) $input->getOption('active') : null,
-            'search' => $input->getOption('search'),
-            'query' => $input->getOption('query'),
+            'type' => (string) ($input->getOption('type') ?? 'all'),
+            'sort' => (string) ($input->getOption('sort') ?? 'updated'),
+            'limit' => (int) (is_string($limit) ? (int) $limit : ($limit ?? 10)),
+            'language' => (string) ($input->getOption('language') ?? ''),
+            'stars' => (int) (is_string($stars) ? (int) $stars : ($stars ?? 0)),
+            'active' => (int) (is_string($active) ? (int) $active : ($active ?? 30)),
+            'search' => (string) ($input->getOption('search') ?? ''),
+            'query' => (string) ($input->getOption('query') ?? ''),
         ];
     }
 
@@ -175,102 +192,102 @@ class ReposCommand extends Command
     {
         // Build GitHub search query from options
         $searchQuery = $this->buildSearchQuery($options);
-        
+
         if ($searchQuery) {
             $output->writeln("<comment>🔍 Searching: \"{$searchQuery}\"</comment>");
-            
+
             try {
                 $searchResults = spin(
                     fn () => $this->github->repos()->search(
                         query: $searchQuery,
-                        sort: $this->mapSortForSearch($options['sort']),
+                        sort: $this->mapSortForSearch((string) ($options['sort'] ?? 'updated')),
                         order: Direction::DESC,
-                        per_page: min(10, (int) $options['limit'])
+                        per_page: min(10, (int) ($options['limit'] ?? 10))
                     ),
                     '🔍 Searching repositories...'
                 );
-                
+
                 return $searchResults->items;
             } catch (\Exception $e) {
-                $output->writeln("<comment>⚠️  Search unavailable in standalone mode. Falling back to listing...</comment>");
+                $output->writeln('<comment>⚠️  Search unavailable in standalone mode. Falling back to listing...</comment>');
                 // Fall through to regular listing
             }
         }
-        
+
         // Fall back to listing user's repositories
         $rawRepos = spin(
             fn () => $this->github->repos()->all(
-                type: $this->mapTypeToEnum($options['type']),
-                sort: $this->mapSortToEnum($options['sort']),
-                per_page: min(10, (int) $options['limit'])
+                type: $this->mapTypeToEnum((string) ($options['type'] ?? 'all')),
+                sort: $this->mapSortToEnum((string) ($options['sort'] ?? 'updated')),
+                per_page: min(10, (int) ($options['limit'] ?? 10))
             )->json(),
             '🔍 Fetching your repositories...'
         );
-        
+
         // Check for API errors
         if (is_array($rawRepos) && isset($rawRepos['message'])) {
             throw new \Exception($rawRepos['message']);
         }
-        
-        return $rawRepos ?? [];
+
+        return $rawRepos;
     }
-    
+
     private function buildSearchQuery(array $options): ?string
     {
-        
+
         $queryParts = [];
-        
+
         // Add natural language query or search term
-        if ($options['query'] ?? false) {
-            return $this->parseNaturalLanguageQuery($options['query']);
+        if (! empty($options['query'])) {
+            return $this->parseNaturalLanguageQuery((string) $options['query']);
         }
-        
-        if ($options['search'] ?? false) {
-            $queryParts[] = $options['search'];
+
+        if (! empty($options['search'])) {
+            $queryParts[] = (string) $options['search'];
         }
-        
+
         // Add language filter
-        if ($options['language'] ?? false) {
-            $queryParts[] = "language:{$options['language']}";
+        if (! empty($options['language'])) {
+            $queryParts[] = 'language:'.((string) $options['language']);
         }
-        
-        // Add stars filter  
-        if ($options['stars'] ?? false) {
-            $queryParts[] = "stars:>={$options['stars']}";
+
+        // Add stars filter
+        if (! empty($options['stars'])) {
+            $queryParts[] = 'stars:>='.((int) $options['stars']);
         }
-        
+
         // Only search if we have specific criteria
-        return !empty($queryParts) ? implode(' ', $queryParts) : null;
+        return ! empty($queryParts) ? implode(' ', $queryParts) : null;
     }
-    
+
     private function parseNaturalLanguageQuery(string $query): string
     {
         $searchParts = [];
         $query = strtolower(trim($query));
-        
+
         // Extract language
         if (preg_match('/\b(php|python|javascript|js|typescript|go|rust|java|ruby)\b/', $query, $matches)) {
             $lang = $matches[1];
             $searchParts[] = "language:{$lang}";
         }
-        
+
         // Extract stars
         if (preg_match('/(\d+)\+?\s*stars?/', $query, $matches)) {
             $searchParts[] = "stars:>={$matches[1]}";
         }
-        
+
         // Extract search terms (remove processed parts)
-        $cleanQuery = preg_replace('/\b(php|python|javascript|js|typescript|go|rust|java|ruby)\b/', '', $query);
-        $cleanQuery = preg_replace('/\d+\+?\s*stars?/', '', $cleanQuery);
-        $cleanQuery = trim(preg_replace('/\s+/', ' ', $cleanQuery));
-        
+        $cleanQuery = (string) preg_replace('/\b(php|python|javascript|js|typescript|go|rust|java|ruby)\b/', '', $query);
+        $cleanQuery = (string) preg_replace('/\d+\+?\s*stars?/', '', $cleanQuery);
+        $cleanQuery = trim((string) preg_replace('/\s+/', ' ', $cleanQuery));
+
         if ($cleanQuery) {
             $searchParts[] = $cleanQuery;
         }
-        
+
         return implode(' ', $searchParts);
     }
-    
+
     private function mapSortForSearch(?string $sort): ?string
     {
         return match ($sort) {
@@ -282,7 +299,6 @@ class ReposCommand extends Command
         };
     }
 
-
     private function displayRepositories(array $repos, OutputInterface $output): void
     {
         $output->writeln('<info>📚 Your Repositories:</info>');
@@ -290,11 +306,11 @@ class ReposCommand extends Command
 
         foreach ($repos as $index => $repo) {
             // Handle both RepoData objects and array format
-            $fullName = is_array($repo) ? $repo['full_name'] : $repo->full_name;
-            $isPrivate = is_array($repo) ? $repo['private'] : $repo->private;
-            $language = is_array($repo) ? ($repo['language'] ?? null) : $repo->language;
-            $description = is_array($repo) ? ($repo['description'] ?? null) : $repo->description;
-            
+            $fullName = is_array($repo) ? (string) $repo['full_name'] : $repo->full_name;
+            $isPrivate = is_array($repo) ? (bool) $repo['private'] : $repo->private;
+            $language = is_array($repo) ? (string) ($repo['language'] ?? '') : $repo->language;
+            $description = is_array($repo) ? (string) ($repo['description'] ?? '') : $repo->description;
+
             $visibility = $isPrivate ? '🔒' : '🌍';
             $languageText = $language ? "({$language})" : '';
 
@@ -306,7 +322,7 @@ class ReposCommand extends Command
                 $languageText
             ));
 
-            if (!empty($description)) {
+            if (! empty($description)) {
                 $output->writeln('   '.$description);
             }
 
@@ -319,17 +335,17 @@ class ReposCommand extends Command
         $choices = [];
         foreach ($repos as $index => $repo) {
             // Handle both RepoData objects and array format
-            $fullName = is_array($repo) ? $repo['full_name'] : $repo->full_name;
-            $isPrivate = is_array($repo) ? $repo['private'] : $repo->private;
-            $language = is_array($repo) ? ($repo['language'] ?? null) : $repo->language;
-            $cloneUrl = is_array($repo) ? $repo['clone_url'] : $repo->clone_url;
-            
+            $fullName = is_array($repo) ? (string) $repo['full_name'] : $repo->full_name;
+            $isPrivate = is_array($repo) ? (bool) $repo['private'] : $repo->private;
+            $language = is_array($repo) ? (string) ($repo['language'] ?? '') : $repo->language;
+            $cloneUrl = is_array($repo) ? (string) $repo['clone_url'] : $repo->clone_url;
+
             $visibility = $isPrivate ? '🔒' : '🌍';
             $languageText = $language ? "({$language})" : '';
             $choices[$cloneUrl] = "{$visibility} {$fullName} {$languageText}";
         }
 
-        $selected = select(
+        $selected = (string) select(
             label: '🎯 Select a repository to clone:',
             options: $choices
         );

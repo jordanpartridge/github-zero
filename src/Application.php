@@ -4,62 +4,42 @@ declare(strict_types=1);
 
 namespace JordanPartridge\GitHubZero;
 
-use ConduitUi\GitHubConnector\GithubConnector;
 use JordanPartridge\GithubClient\Github;
+use JordanPartridge\GitHubZero\Traits\InteractsWithGitHub;
 use Symfony\Component\Console\Application as ConsoleApplication;
 
 class Application extends ConsoleApplication
 {
+    use InteractsWithGitHub;
+
     private const VERSION = '1.0.0';
 
     private const NAME = 'GitHub Zero';
 
     /** @var array<class-string> */
     private array $commandClasses = [
-        // Discovery Commands
-        Commands\ListCommand::class,
-        Commands\RepoCommand::class,
-        Commands\IssueCommand::class,
-
-        // Functional Commands
-        Commands\ReposCommand::class,
-        Commands\CloneCommand::class,
-        Commands\IssuesCommand::class,
+        Commands\Repos::class,
+        Commands\CloneRepo::class,
+        Commands\Issues::class,
     ];
 
     public function __construct(?Github $github = null)
     {
         parent::__construct(self::NAME, self::VERSION);
 
-        $this->setupCommands($github ?? $this->createGithubClient());
+        $this->setupCommands($github);
     }
 
-    private function createGithubClient(): Github
-    {
-        $token = $this->getGithubToken();
-        $connector = new GithubConnector($token);
-
-        return new Github($connector);
-    }
-
-    private function getGithubToken(): string
-    {
-        return $_ENV['GITHUB_TOKEN'] ?? getenv('GITHUB_TOKEN') ?: '';
-    }
-
-    private function setupCommands(Github $github): void
+    private function setupCommands(?Github $github): void
     {
         foreach ($this->commandClasses as $commandClass) {
-            // Discovery commands don't need GitHub client
-            if (in_array($commandClass, [
-                Commands\ListCommand::class,
-                Commands\RepoCommand::class,
-                Commands\IssueCommand::class,
-            ])) {
-                $this->add(new $commandClass);
+            // Clone command doesn't need GitHub client in constructor
+            if ($commandClass === Commands\CloneRepo::class) {
+                $command = new $commandClass;
             } else {
-                $this->add(new $commandClass($github));
+                $command = new $commandClass($github);
             }
+            $this->add($command);
         }
     }
 }

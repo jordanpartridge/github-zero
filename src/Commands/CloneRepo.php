@@ -16,19 +16,21 @@ use function Laravel\Prompts\select;
 use function Laravel\Prompts\spin;
 use function Laravel\Prompts\text;
 
-class CloneCommand extends Command
+class CloneRepo extends Command
 {
-    public function __construct(
-        protected Github $github
-    ) {
+    use \JordanPartridge\GitHubZero\Traits\InteractsWithGitHub;
+
+    public function __construct()
+    {
         parent::__construct();
     }
+
 
     protected function configure(): void
     {
         $this
-            ->setName('repo:clone')
-            ->setDescription('Clone a GitHub repository with enhanced selection and filtering')
+            ->setName('clone')
+            ->setDescription('Clone a GitHub repository')
             ->addArgument('repo', InputArgument::OPTIONAL, 'Repository name (owner/repo) or URL to clone')
             ->addOption('directory', null, InputOption::VALUE_OPTIONAL, 'Directory to clone into')
             ->addOption('interactive', null, InputOption::VALUE_NONE, 'Use interactive selection');
@@ -45,13 +47,15 @@ class CloneCommand extends Command
 
         $this->displayWelcome($output);
 
-        $repo = $input->getArgument('repo');
+        $repoArgument = $input->getArgument('repo');
+        $repo = (string) ($input->getArgument('repo') ?? '');
+        $interactiveOption = (bool) $input->getOption('interactive');
 
-        if (! $repo || $input->getOption('interactive')) {
+        if (empty($repo) || (bool) $interactiveOption) {
             $repo = $this->selectRepository($output);
         }
 
-        if (! $repo) {
+        if (empty($repo)) {
             $output->writeln('<comment>👋 No repository selected. See you next time!</comment>');
 
             return 0;
@@ -68,11 +72,12 @@ class CloneCommand extends Command
         $output->writeln('');
     }
 
-    private function selectRepository(OutputInterface $output): ?string
+    private function selectRepository(OutputInterface $output): string
     {
         try {
+            $github = $this->createGithubClient();
             $repos = spin(
-                fn () => $this->github->repos()->all(per_page: 20)->json(),
+                fn () => $github->repos()->all(per_page: 20)->json(),
                 '🔍 Fetching your repositories...'
             );
 
@@ -80,13 +85,13 @@ class CloneCommand extends Command
             if (is_array($repos) && isset($repos['message'])) {
                 $output->writeln('<error>❌ GitHub API Error: '.$repos['message'].'</error>');
 
-                return text('📝 Enter repository manually (owner/repo or full URL):');
+                return (string) text('📝 Enter repository manually (owner/repo or full URL):');
             }
 
             if (empty($repos) || ! is_array($repos) || ! isset($repos[0])) {
                 $output->writeln('<comment>📭 No repositories found.</comment>');
 
-                return text('📝 Enter repository manually (owner/repo or full URL):');
+                return (string) text('📝 Enter repository manually (owner/repo or full URL):');
             }
 
             $repoOptions = ['manual' => '⌨️ Enter repository manually'];
@@ -96,10 +101,10 @@ class CloneCommand extends Command
                 $repoOptions[$repo['full_name']] = "{$visibility} {$repo['full_name']} {$language}";
             }
 
-            $selection = select('📥 Which repository would you like to clone?', $repoOptions);
+            $selection = (string) select('📥 Which repository would you like to clone?', $repoOptions);
 
             if ($selection === 'manual') {
-                return text('📝 Enter repository (owner/repo or full URL):');
+                return (string) text('📝 Enter repository (owner/repo or full URL):');
             }
 
             return $selection;
@@ -107,7 +112,7 @@ class CloneCommand extends Command
         } catch (\Exception $e) {
             $output->writeln('<error>💥 Failed to fetch repositories: '.$e->getMessage().'</error>');
 
-            return text('📝 Enter repository manually (owner/repo or full URL):');
+            return (string) text('📝 Enter repository manually (owner/repo or full URL):');
         }
     }
 
@@ -115,7 +120,7 @@ class CloneCommand extends Command
     {
         // Parse repository input
         $cloneUrl = $this->parseRepositoryInput($repo);
-        $directory = $input->getOption('directory') ?: $this->getDirectoryName($repo);
+        $directory = (string) ($input->getOption('directory') ?: $this->getDirectoryName($repo));
 
         $output->writeln("<info>📥 Cloning {$repo}...</info>");
 
@@ -128,7 +133,10 @@ class CloneCommand extends Command
         }
 
         // Execute clone using Process to prevent shell injection
-        $args = array_filter(['git', 'clone', $cloneUrl, $directory ?: null]);
+        $args = ['git', 'clone', $cloneUrl];
+        if (! empty($directory)) {
+            $args[] = $directory;
+        }
         $process = new \Symfony\Component\Process\Process($args);
 
         $output->writeln('<comment>🚀 Running: '.implode(' ', $args).'</comment>');
@@ -147,7 +155,7 @@ class CloneCommand extends Command
             $output->writeln("<error>💥 Failed to clone {$repo}</error>");
         }
 
-        return $result;
+        return $result ?? 1;
     }
 
     private function parseRepositoryInput(string $repo): string
@@ -174,8 +182,5 @@ class CloneCommand extends Command
         return str_replace('.git', '', $basename);
     }
 
-    private function hasGitHubToken(): bool
-    {
-        return ! empty($_ENV['GITHUB_TOKEN']) || ! empty(getenv('GITHUB_TOKEN'));
-    }
+    
 }

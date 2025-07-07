@@ -27,8 +27,18 @@ if (!$autoloaderFound) {
 // GitHub Client v2.0.0 no longer needs config() helper bootstrap
 
 use JordanPartridge\GitHubZero\Application;
+use JordanPartridge\GithubClient\Github;
+use ConduitUi\GitHubConnector\GithubConnector;
 
-$app = new Application();
+// Initialize GitHub client if token is available
+$github = null;
+$token = $_ENV['GITHUB_TOKEN'] ?? getenv('GITHUB_TOKEN');
+if ($token) {
+    $connector = new GithubConnector($token);
+    $github = new Github($connector);
+}
+
+$app = new Application($github);
 try {
     $app->run();
 } catch (\Throwable $e) {

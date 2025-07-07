@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace JordanPartridge\GitHubZero;
 
-use JordanPartridge\GitHubZero\Commands\CloneCommand;
-use JordanPartridge\GitHubZero\Commands\IssuesCommand;
-use JordanPartridge\GitHubZero\Commands\ReposCommand;
+use JordanPartridge\GitHubZero\Commands\CloneRepo;
+use JordanPartridge\GitHubZero\Commands\Issues;
+use JordanPartridge\GitHubZero\Commands\Repos;
 
 class ConduitExtension
 {
@@ -40,9 +40,9 @@ class ConduitExtension
     public function commands(): array
     {
         return [
-            'github:repos' => ReposCommand::class,
-            'github:clone' => CloneCommand::class,
-            'github:issues' => IssuesCommand::class,
+            'github:repos' => Repos::class,
+            'github:clone' => CloneRepo::class,
+            'github:issues' => Issues::class,
         ];
     }
 

@@ -18,8 +18,8 @@ import sys
 LIMIT = 4000
 MAX_NOTES = 10
 # Fixed footer. Always these four fields, in this order, never trimmed:
-# repo, version (the release tag), full commit SHA, link to the release or commit.
-FOOTER_TEMPLATE = "repo: {repo}\nversion: {version}\ncommit: {commit}\nlink: {link}"
+# repo, version (the release tag), full commit SHA, url of the release or commit.
+FOOTER_TEMPLATE = "repo: {repo}\nversion: {version}\ncommit: {commit}\nurl: {url}"
 REPO = os.environ["REPO"]
 TAG = os.environ["TAG"]
 BODY = os.environ.get("RELEASE_BODY", "") or ""
@@ -311,8 +311,8 @@ def main():
     sections = [patch_notes(commits, prs), tests(sha) if sha else ("Tests:", []), acceptance(prs), rev, chg,
                 local_pipeline(sha, prs) if sha else ("Local pipeline:", [])]
     head = f"{NAME} {TAG}: {clean(PITCH, 400)}" if PITCH else f"{NAME} {TAG}"
-    link = (URL or "").strip() or (f"https://github.com/{REPO}/commit/{sha}" if sha else "")
-    footer = FOOTER_TEMPLATE.format(repo=REPO, version=TAG, commit=sha or "", link=link)
+    url = (URL or "").strip() or (f"https://github.com/{REPO}/commit/{sha}" if sha else "")
+    footer = FOOTER_TEMPLATE.format(repo=REPO, version=TAG, commit=sha or "", url=url)
     tail = "\n".join(x for x in [f"composer require {PACKAGE}" if PACKAGE else "", footer] if x)
     # trim lowest priority first: changed in review, local pipeline, reviews, AC, tests, patch notes
     order = [4, 5, 3, 2, 1, 0]

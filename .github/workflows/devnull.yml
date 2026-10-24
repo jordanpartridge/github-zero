@@ -1,0 +1,18 @@
+name: Post release to /dev/null
+
+on:
+  release:
+    types: [published]
+
+permissions: {}
+
+jobs:
+  commit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: dev-null-sh/dev-null.sh/.github/actions/commit@production
+        with:
+          body: |
+            Released github-zero ${{ github.event.release.tag_name }}. Lightweight GitHub CLI that works standalone, in Laravel, Laravel Zero, or as a Conduit extension
+            ${{ github.event.release.html_url }}
+          ssh-key: ${{ secrets.DEVNULL_SSH_KEY }}

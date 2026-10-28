@@ -1,0 +1,311 @@
+parameters:
+	ignoreErrors:
+		-
+			message: "#^Expression on left side of \\?\\? is not nullable\\.$#"
+			count: 1
+			path: src/Application.php
+
+		-
+			message: "#^Method JordanPartridge\\\\GitHubZero\\\\Commands\\\\CloneCommand\\:\\:cloneRepository\\(\\) should return int but returns int\\|null\\.$#"
+			count: 1
+			path: src/Commands/CloneCommand.php
+
+		-
+			message: "#^Method JordanPartridge\\\\GitHubZero\\\\Commands\\\\CloneCommand\\:\\:selectRepository\\(\\) never returns null so it can be removed from the return type\\.$#"
+			count: 1
+			path: src/Commands/CloneCommand.php
+
+		-
+			message: "#^Method JordanPartridge\\\\GitHubZero\\\\Commands\\\\CloneCommand\\:\\:selectRepository\\(\\) should return string\\|null but returns int\\|string\\.$#"
+			count: 1
+			path: src/Commands/CloneCommand.php
+
+		-
+			message: "#^Parameter \\#1 \\$filename of function file_exists expects string, mixed given\\.$#"
+			count: 1
+			path: src/Commands/CloneCommand.php
+
+		-
+			message: "#^Parameter \\#1 \\$repo of method JordanPartridge\\\\GitHubZero\\\\Commands\\\\CloneCommand\\:\\:cloneRepository\\(\\) expects string, mixed given\\.$#"
+			count: 1
+			path: src/Commands/CloneCommand.php
+
+		-
+			message: "#^Part \\$directory \\(mixed\\) of encapsed string cannot be cast to string\\.$#"
+			count: 3
+			path: src/Commands/CloneCommand.php
+
+		-
+			message: "#^Cannot cast mixed to int\\.$#"
+			count: 1
+			path: src/Commands/ReposCommand.php
+
+		-
+			message: "#^Method JordanPartridge\\\\GitHubZero\\\\Commands\\\\ReposCommand\\:\\:displayRepositories\\(\\) has parameter \\$repos with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/Commands/ReposCommand.php
+
+		-
+			message: "#^Method JordanPartridge\\\\GitHubZero\\\\Commands\\\\ReposCommand\\:\\:getFilterOptions\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/Commands/ReposCommand.php
+
+		-
+			message: "#^Method JordanPartridge\\\\GitHubZero\\\\Commands\\\\ReposCommand\\:\\:handleInteractiveMode\\(\\) has parameter \\$repos with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/Commands/ReposCommand.php
+
+		-
+			message: "#^Parameter \\#1 \\$path of function basename expects string, int\\|string given\\.$#"
+			count: 1
+			path: src/Commands/ReposCommand.php
+
+		-
+			message: "#^Parameter \\$default of function Laravel\\\\Prompts\\\\select expects int\\|string\\|null, mixed given\\.$#"
+			count: 1
+			path: src/Commands/ReposCommand.php
+
+		-
+			message: "#^Method JordanPartridge\\\\GitHubZero\\\\Components\\\\AbstractGitHubComponent\\:\\:execute\\(\\) has parameter \\$params with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/Components/AbstractGitHubComponent.php
+
+		-
+			message: "#^Method JordanPartridge\\\\GitHubZero\\\\Components\\\\AbstractGitHubComponent\\:\\:execute\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/Components/AbstractGitHubComponent.php
+
+		-
+			message: "#^Method JordanPartridge\\\\GitHubZero\\\\Components\\\\AbstractGitHubComponent\\:\\:executeComponent\\(\\) has parameter \\$params with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/Components/AbstractGitHubComponent.php
+
+		-
+			message: "#^Method JordanPartridge\\\\GitHubZero\\\\Components\\\\AbstractGitHubComponent\\:\\:executeComponent\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/Components/AbstractGitHubComponent.php
+
+		-
+			message: "#^Method JordanPartridge\\\\GitHubZero\\\\Components\\\\AbstractGitHubComponent\\:\\:getSupportedFormats\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/Components/AbstractGitHubComponent.php
+
+		-
+			message: "#^Method JordanPartridge\\\\GitHubZero\\\\Components\\\\AbstractGitHubComponent\\:\\:validate\\(\\) has parameter \\$params with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/Components/AbstractGitHubComponent.php
+
+		-
+			message: "#^Method JordanPartridge\\\\GitHubZero\\\\Components\\\\AbstractGitHubComponent\\:\\:validateField\\(\\) has parameter \\$definition with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/Components/AbstractGitHubComponent.php
+
+		-
+			message: "#^Method JordanPartridge\\\\GitHubZero\\\\Components\\\\AbstractGitHubComponent\\:\\:validateField\\(\\) has parameter \\$value with no type specified\\.$#"
+			count: 1
+			path: src/Components/AbstractGitHubComponent.php
+
+		-
+			message: "#^Method JordanPartridge\\\\GitHubZero\\\\Components\\\\CloneComponent\\:\\:executeComponent\\(\\) has parameter \\$params with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/Components/CloneComponent.php
+
+		-
+			message: "#^Method JordanPartridge\\\\GitHubZero\\\\Components\\\\CloneComponent\\:\\:executeComponent\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/Components/CloneComponent.php
+
+		-
+			message: "#^Method JordanPartridge\\\\GitHubZero\\\\Components\\\\CloneComponent\\:\\:getMetadata\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/Components/CloneComponent.php
+
+		-
+			message: "#^Method JordanPartridge\\\\GitHubZero\\\\Components\\\\CloneComponent\\:\\:getSchema\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/Components/CloneComponent.php
+
+		-
+			message: "#^Method JordanPartridge\\\\GitHubZero\\\\Components\\\\CloneComponent\\:\\:getSupportedFormats\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/Components/CloneComponent.php
+
+		-
+			message: "#^Call to an undefined method JordanPartridge\\\\GithubClient\\\\Github\\:\\:issues\\(\\)\\.$#"
+			count: 3
+			path: src/Components/IssuesComponent.php
+
+		-
+			message: "#^Method JordanPartridge\\\\GitHubZero\\\\Components\\\\IssuesComponent\\:\\:createIssue\\(\\) has parameter \\$params with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/Components/IssuesComponent.php
+
+		-
+			message: "#^Method JordanPartridge\\\\GitHubZero\\\\Components\\\\IssuesComponent\\:\\:createIssue\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/Components/IssuesComponent.php
+
+		-
+			message: "#^Method JordanPartridge\\\\GitHubZero\\\\Components\\\\IssuesComponent\\:\\:executeComponent\\(\\) has parameter \\$params with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/Components/IssuesComponent.php
+
+		-
+			message: "#^Method JordanPartridge\\\\GitHubZero\\\\Components\\\\IssuesComponent\\:\\:executeComponent\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/Components/IssuesComponent.php
+
+		-
+			message: "#^Method JordanPartridge\\\\GitHubZero\\\\Components\\\\IssuesComponent\\:\\:getMetadata\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/Components/IssuesComponent.php
+
+		-
+			message: "#^Method JordanPartridge\\\\GitHubZero\\\\Components\\\\IssuesComponent\\:\\:getSchema\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/Components/IssuesComponent.php
+
+		-
+			message: "#^Method JordanPartridge\\\\GitHubZero\\\\Components\\\\IssuesComponent\\:\\:getSupportedFormats\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/Components/IssuesComponent.php
+
+		-
+			message: "#^Method JordanPartridge\\\\GitHubZero\\\\Components\\\\IssuesComponent\\:\\:listIssues\\(\\) has parameter \\$params with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/Components/IssuesComponent.php
+
+		-
+			message: "#^Method JordanPartridge\\\\GitHubZero\\\\Components\\\\IssuesComponent\\:\\:listIssues\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/Components/IssuesComponent.php
+
+		-
+			message: "#^Method JordanPartridge\\\\GitHubZero\\\\Components\\\\IssuesComponent\\:\\:showIssue\\(\\) has parameter \\$params with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/Components/IssuesComponent.php
+
+		-
+			message: "#^Method JordanPartridge\\\\GitHubZero\\\\Components\\\\IssuesComponent\\:\\:showIssue\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/Components/IssuesComponent.php
+
+		-
+			message: "#^Method JordanPartridge\\\\GitHubZero\\\\Components\\\\ReposComponent\\:\\:executeComponent\\(\\) has parameter \\$params with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/Components/ReposComponent.php
+
+		-
+			message: "#^Method JordanPartridge\\\\GitHubZero\\\\Components\\\\ReposComponent\\:\\:executeComponent\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/Components/ReposComponent.php
+
+		-
+			message: "#^Method JordanPartridge\\\\GitHubZero\\\\Components\\\\ReposComponent\\:\\:getMetadata\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/Components/ReposComponent.php
+
+		-
+			message: "#^Method JordanPartridge\\\\GitHubZero\\\\Components\\\\ReposComponent\\:\\:getSchema\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/Components/ReposComponent.php
+
+		-
+			message: "#^Method JordanPartridge\\\\GitHubZero\\\\Components\\\\ReposComponent\\:\\:getSupportedFormats\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/Components/ReposComponent.php
+
+		-
+			message: "#^Method JordanPartridge\\\\GitHubZero\\\\ConduitExtension\\:\\:commands\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/ConduitExtension.php
+
+		-
+			message: "#^Method JordanPartridge\\\\GitHubZero\\\\ConduitExtension\\:\\:config\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/ConduitExtension.php
+
+		-
+			message: "#^Method JordanPartridge\\\\GitHubZero\\\\Contracts\\\\GitHubComponent\\:\\:execute\\(\\) has parameter \\$params with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/Contracts/GitHubComponent.php
+
+		-
+			message: "#^Method JordanPartridge\\\\GitHubZero\\\\Contracts\\\\GitHubComponent\\:\\:execute\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/Contracts/GitHubComponent.php
+
+		-
+			message: "#^Method JordanPartridge\\\\GitHubZero\\\\Contracts\\\\GitHubComponent\\:\\:getMetadata\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/Contracts/GitHubComponent.php
+
+		-
+			message: "#^Method JordanPartridge\\\\GitHubZero\\\\Contracts\\\\GitHubComponent\\:\\:getSchema\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/Contracts/GitHubComponent.php
+
+		-
+			message: "#^Method JordanPartridge\\\\GitHubZero\\\\Contracts\\\\GitHubComponent\\:\\:getSupportedFormats\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/Contracts/GitHubComponent.php
+
+		-
+			message: "#^Method JordanPartridge\\\\GitHubZero\\\\Contracts\\\\GitHubComponent\\:\\:validate\\(\\) has parameter \\$params with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/Contracts/GitHubComponent.php
+
+		-
+			message: "#^Function config_path not found\\.$#"
+			count: 1
+			path: src/GitHubZeroServiceProvider.php
+
+		-
+			message: "#^Method JordanPartridge\\\\GitHubZero\\\\Support\\\\ComponentResult\\:\\:error\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/Support/ComponentResult.php
+
+		-
+			message: "#^Method JordanPartridge\\\\GitHubZero\\\\Support\\\\ComponentResult\\:\\:getData\\(\\) has parameter \\$result with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/Support/ComponentResult.php
+
+		-
+			message: "#^Method JordanPartridge\\\\GitHubZero\\\\Support\\\\ComponentResult\\:\\:getData\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/Support/ComponentResult.php
+
+		-
+			message: "#^Method JordanPartridge\\\\GitHubZero\\\\Support\\\\ComponentResult\\:\\:getError\\(\\) has parameter \\$result with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/Support/ComponentResult.php
+
+		-
+			message: "#^Method JordanPartridge\\\\GitHubZero\\\\Support\\\\ComponentResult\\:\\:getErrorCode\\(\\) has parameter \\$result with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/Support/ComponentResult.php
+
+		-
+			message: "#^Method JordanPartridge\\\\GitHubZero\\\\Support\\\\ComponentResult\\:\\:isSuccess\\(\\) has parameter \\$result with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/Support/ComponentResult.php
+
+		-
+			message: "#^Method JordanPartridge\\\\GitHubZero\\\\Support\\\\ComponentResult\\:\\:success\\(\\) has parameter \\$data with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/Support/ComponentResult.php
+
+		-
+			message: "#^Method JordanPartridge\\\\GitHubZero\\\\Support\\\\ComponentResult\\:\\:success\\(\\) has parameter \\$metadata with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/Support/ComponentResult.php
+
+		-
+			message: "#^Method JordanPartridge\\\\GitHubZero\\\\Support\\\\ComponentResult\\:\\:success\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/Support/ComponentResult.php
+
+		-
+			message: "#^Method JordanPartridge\\\\GitHubZero\\\\Support\\\\ErrorHandler\\:\\:createErrorResult\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/Support/ErrorHandler.php

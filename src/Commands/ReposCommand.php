@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace JordanPartridge\GitHubZero\Commands;
 
+use JordanPartridge\GithubClient\Enums\Repos\Type as RepoType;
+use JordanPartridge\GithubClient\Enums\Sort;
+use JordanPartridge\GithubClient\Github;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use JordanPartridge\GithubClient\Github;
-use JordanPartridge\GithubClient\Enums\Sort;
-use JordanPartridge\GithubClient\Enums\Repos\Type as RepoType;
 
 use function Laravel\Prompts\confirm;
 use function Laravel\Prompts\select;
@@ -37,9 +37,10 @@ class ReposCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        if (!$this->hasGitHubToken()) {
+        if (! $this->hasGitHubToken()) {
             $output->writeln('<error>🚫 No GitHub token found!</error>');
             $output->writeln('<comment>💡 Set GITHUB_TOKEN environment variable</comment>');
+
             return 1;
         }
 
@@ -59,21 +60,24 @@ class ReposCommand extends Command
 
             // Check for API errors
             if (is_array($repos) && isset($repos['message'])) {
-                $output->writeln('<error>❌ GitHub API Error: ' . $repos['message'] . '</error>');
+                $output->writeln('<error>❌ GitHub API Error: '.$repos['message'].'</error>');
                 if (isset($repos['documentation_url'])) {
-                    $output->writeln('<comment>📖 See: ' . $repos['documentation_url'] . '</comment>');
+                    $output->writeln('<comment>📖 See: '.$repos['documentation_url'].'</comment>');
                 }
+
                 return 1;
             }
 
-            if (empty($repos) || !is_array($repos)) {
+            if (empty($repos) || ! is_array($repos)) {
                 $output->writeln('<comment>📭 No repositories found matching your criteria.</comment>');
+
                 return 0;
             }
 
             // Check if it's a valid repo array (should have numeric indices)
-            if (!isset($repos[0])) {
+            if (! isset($repos[0])) {
                 $output->writeln('<error>❌ Unexpected API response format</error>');
+
                 return 1;
             }
 
@@ -84,7 +88,8 @@ class ReposCommand extends Command
             }
 
         } catch (\Exception $e) {
-            $output->writeln('<error>❌ Error fetching repositories: ' . $e->getMessage() . '</error>');
+            $output->writeln('<error>❌ Error fetching repositories: '.$e->getMessage().'</error>');
+
             return 1;
         }
 
@@ -93,7 +98,7 @@ class ReposCommand extends Command
 
     private function hasGitHubToken(): bool
     {
-        return !empty($_ENV['GITHUB_TOKEN']) || !empty(getenv('GITHUB_TOKEN'));
+        return ! empty($_ENV['GITHUB_TOKEN']) || ! empty(getenv('GITHUB_TOKEN'));
     }
 
     private function displayWelcome(OutputInterface $output): void
@@ -115,7 +120,7 @@ class ReposCommand extends Command
                         'owner' => 'Owned by me',
                         'public' => 'Public repositories',
                         'private' => 'Private repositories',
-                        'member' => 'Member repositories'
+                        'member' => 'Member repositories',
                     ],
                     default: 'all'
                 ),
@@ -125,7 +130,7 @@ class ReposCommand extends Command
                         'updated' => 'Recently updated',
                         'created' => 'Recently created',
                         'pushed' => 'Recently pushed',
-                        'full_name' => 'Alphabetical'
+                        'full_name' => 'Alphabetical',
                     ],
                     default: 'updated'
                 ),
@@ -138,14 +143,14 @@ class ReposCommand extends Command
                         '50' => '50 repositories',
                     ],
                     default: $input->getOption('limit') ?? '10'
-                )
+                ),
             ];
         }
 
         return [
             'type' => $input->getOption('type') ?? 'all',
             'sort' => $input->getOption('sort') ?? 'updated',
-            'limit' => (int) ($input->getOption('limit') ?? 10)
+            'limit' => (int) ($input->getOption('limit') ?? 10),
         ];
     }
 
@@ -158,7 +163,7 @@ class ReposCommand extends Command
             $visibility = $repo['private'] ? '🔒' : '🌍';
             $language = $repo['language'] ?? null;
             $language = $language ? "({$language})" : '';
-            
+
             $output->writeln(sprintf(
                 '<comment>%d.</comment> %s <info>%s</info> %s',
                 $index + 1,
@@ -166,11 +171,11 @@ class ReposCommand extends Command
                 $repo['full_name'],
                 $language
             ));
-            
-            if (!empty($repo['description'])) {
-                $output->writeln('   ' . $repo['description']);
+
+            if (! empty($repo['description'])) {
+                $output->writeln('   '.$repo['description']);
             }
-            
+
             $output->writeln('');
         }
     }
@@ -195,10 +200,10 @@ class ReposCommand extends Command
             default: true
         )) {
             $output->writeln("<info>🔄 Cloning {$selected}...</info>");
-            
+
             $repoName = basename($selected, '.git');
             exec("git clone {$selected} {$repoName}", $gitOutput, $exitCode);
-            
+
             if ($exitCode === 0) {
                 $output->writeln("<info>✅ Successfully cloned to ./{$repoName}</info>");
             } else {

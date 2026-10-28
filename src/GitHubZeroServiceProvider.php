@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace JordanPartridge\GitHubZero;
 
 use Illuminate\Support\ServiceProvider;
-use JordanPartridge\GitHubZero\Commands\ReposCommand;
-use JordanPartridge\GitHubZero\Commands\CloneCommand;
 use JordanPartridge\GithubClient\GithubClientServiceProvider;
+use JordanPartridge\GitHubZero\Commands\CloneCommand;
+use JordanPartridge\GitHubZero\Commands\ReposCommand;
 
 class GitHubZeroServiceProvider extends ServiceProvider
 {
